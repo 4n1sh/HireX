@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.venv/
+venv/
+ENV/
+.env
+.env.*
+
+# Pytest
+.pytest_cache/
+
+# FastAPI/uvicorn
+*.log
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Node/Frontend
+node_modules/
+dist/
+build/
+
+# Vite/React
+*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Misc
+coverage/
+htmlcov/

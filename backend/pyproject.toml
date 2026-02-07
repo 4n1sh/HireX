@@ -1,0 +1,14 @@
+[project]
+name = "hirex-backend"
+version = "0.1.0"
+description = "HireX FastAPI backend"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi",
+  "uvicorn[standard]",
+  "sqlalchemy",
+  "psycopg2-binary",
+  "python-dotenv",
+  "pydantic",
+]
