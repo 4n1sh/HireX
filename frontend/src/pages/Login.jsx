@@ -48,13 +48,16 @@ function Login() {
   return (
     <div className="auth-wrapper">
       <div className="auth-card">
-        <div className="logo">
-          <span className="logo-icon">H</span>
-          <span className="logo-text">HireX</span>
+        <div className="auth-header">
+          <div className="logo">
+            <div className="logo-mark" aria-hidden="true" />
+            <span className="logo-text">HireX</span>
+          </div>
+          <div className="auth-header-text">
+            <h2>Sign in to your account</h2>
+            <p className="subtitle">Enter your details to continue</p>
+          </div>
         </div>
-
-        <h2>Welcome to HireX</h2>
-        <p className="subtitle">Login to continue</p>
 
         {error && <p className="error-text">{error}</p>}
 

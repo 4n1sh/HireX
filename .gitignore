@@ -1,42 +1,57 @@
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.so
-*.egg-info/
-.eggs/
-.venv/
-venv/
-ENV/
-.env
-.env.*
-
-# Pytest
-.pytest_cache/
-
-# FastAPI/uvicorn
-*.log
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Node/Frontend
+# --------------------
+# Node / React
+# --------------------
 node_modules/
 dist/
 build/
 
-# Vite/React
-*.local
+# Vite
+.vite/
 
-# OS
+# --------------------
+# Environment variables
+# --------------------
+.env
+.env.local
+.env.development
+.env.production
+
+# --------------------
+# Logs
+# --------------------
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --------------------
+# OS / Editor
+# --------------------
 .DS_Store
 Thumbs.db
 
-# IDE
+# VS Code
 .vscode/
+
+# IntelliJ / WebStorm
 .idea/
 
+# --------------------
+# Python (for backend later)
+# --------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+
+# --------------------
+# Database
+# --------------------
+*.sqlite3
+*.db
+
+# --------------------
 # Misc
+# --------------------
 coverage/
-htmlcov/

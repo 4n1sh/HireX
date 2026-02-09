@@ -20,7 +20,16 @@ function Signup() {
   return (
     <div className="auth-wrapper">
       <div className="auth-card">
-        <h2>Create your HireX account</h2>
+        <div className="auth-header">
+          <div className="logo">
+            <div className="logo-mark" aria-hidden="true" />
+            <span className="logo-text">HireX</span>
+          </div>
+          <div className="auth-header-text">
+            <h2>Create a new account</h2>
+            <p className="subtitle">Start hiring or apply in minutes</p>
+          </div>
+        </div>
 
         <form onSubmit={handleSubmit}>
           <input

@@ -1,8 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
 body {
   font-family: 'Roboto', sans-serif;
-  background: #f9fafb;
+  background-color: #f5f7fb;
   color: #111827;
+  margin: 0;
+  overflow: hidden;
 }
 
 .auth-wrapper {
@@ -10,30 +12,48 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #f9fafb;
+  padding: 24px;
+  background:
+    radial-gradient(900px 500px at 10% 0%, rgba(37, 99, 235, 0.12), transparent 60%),
+    radial-gradient(700px 400px at 100% 20%, rgba(99, 102, 241, 0.1), transparent 55%),
+    #f3f4f6;
 }
 
 .auth-card {
-  width: 380px;
+  width: 100%;
+  max-width: 440px;
   background: #ffffff;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  padding: 36px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.auth-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  text-align: center;
+}
+
+.auth-header-text h2 {
+  margin: 0 0 4px;
 }
 
 .logo {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 20px;
 }
 
-.logo-icon {
-  background: #1e3a8a;
-  color: white;
-  font-weight: bold;
-  padding: 8px 12px;
-  border-radius: 6px;
+.logo-mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px dashed #cbd5f5;
+  background: #eef2ff;
 }
 
 .logo-text {
@@ -41,14 +61,15 @@ body {
   font-weight: 600;
 }
 
+
 .auth-card h2 {
-  margin-bottom: 10px;
+  font-size: 22px;
 }
 
 .subtitle {
   font-size: 14px;
   color: #6b7280;
-  margin-bottom: 20px;
+  margin: 0;
 }
 
 .auth-card label {
@@ -59,20 +80,39 @@ body {
 .auth-card input,
 .auth-card select {
   width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 6px;
+  padding: 12px;
+  margin: 12px 0;
+  border-radius: 8px;
   border: 1px solid #d1d5db;
+  background: #ffffff;
+  transition: border-color 0.2s ease;
+}
+
+.auth-card input:focus,
+.auth-card select:focus {
+  outline: none;
+  border-color: #2563eb;
 }
 
 .primary-btn {
   width: 100%;
-  padding: 10px;
-  background: #1e3a8a;
+  padding: 11px;
+  background: #2563eb;
   color: white;
   border: none;
-  border-radius: 6px;
-  font-weight: 500;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.primary-btn:hover {
+  background: #1d4ed8;
+}
+
+.primary-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .divider {
@@ -100,16 +140,28 @@ body {
 
 .google-btn {
   width: 100%;
-  padding: 10px;
+  padding: 11px;
   border: 1px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 8px;
   background: white;
-  font-weight: 500;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.google-btn:hover {
+  border-color: #9ca3af;
 }
 
 .switch-auth {
   text-align: center;
   margin-top: 15px;
+  color: #4b5563;
+}
+
+.switch-auth a {
+  color: #2563eb;
+  font-weight: 600;
 }
 .error-text {
   color: #dc2626;
