@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { supabase } from "../lib/supabase";
 
 function Login() {
   const navigate = useNavigate();
@@ -9,40 +10,65 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e) => {
+  // 🔹 Check session on page load (important for Google redirect)
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      if (!data.session) {
+        return;
+      }
+
+      const role = data.session.user.user_metadata?.role;
+
+      if (role === "HR") {
+        navigate("/hr/dashboard");
+      } else if (role === "CANDIDATE") {
+        navigate("/candidate/dashboard");
+      } else {
+        navigate("/select-role"); // Google user without role
+      }
+    };
+
+    checkSession();
+  }, [navigate]);
+
+  // 🔹 Email login
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setError("");
 
-    // Basic validation
-    if (!email || !password) {
-      setError("Please enter both email and password.");
-      return;
-    }
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    setLoading(true);
+    setLoading(false);
 
-    // MOCK LOGIN (replace with API later)
-    setTimeout(() => {
-      const fakeResponse = {
-        token: "mock-jwt-token",
-        role: "HR", // or "CANDIDATE"
-      };
+    if (error) {
+      setError(error.message);
+    } else {
+      const role = data.user.user_metadata?.role;
 
-      localStorage.setItem("token", fakeResponse.token);
-      localStorage.setItem("role", fakeResponse.role);
-
-      setLoading(false);
-
-      if (fakeResponse.role === "HR") {
+      if (role === "HR") {
         navigate("/hr/dashboard");
-      } else {
+      } else if (role === "CANDIDATE") {
         navigate("/candidate/dashboard");
+      } else {
+        navigate("/select-role");
       }
-    }, 1000);
+    }
   };
 
-  const handleGoogleLogin = () => {
-    alert("Google OAuth will be integrated here.");
+  // 🔹 Google login
+  const handleGoogleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
   };
 
   return (
@@ -67,6 +93,7 @@ function Login() {
             placeholder="Email address"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
           <input
@@ -74,6 +101,7 @@ function Login() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
 
           <button type="submit" className="primary-btn" disabled={loading}>

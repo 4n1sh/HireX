@@ -88,6 +88,42 @@ body {
   transition: border-color 0.2s ease;
 }
 
+.password-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-field input {
+  padding-right: 86px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 8px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #ffffff, #f9fafb);
+  color: #111827;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s ease;
+}
+
+.toggle-password:hover {
+  border-color: #cbd5f5;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.12);
+  transform: translateY(-1px);
+}
+
+.toggle-password:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
 .auth-card input:focus,
 .auth-card select:focus {
   outline: none;
