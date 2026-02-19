@@ -10,23 +10,13 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 🔹 Check session on page load (important for Google redirect)
+  // 🔹 Check session when page loads
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
 
-      if (!data.session) {
-        return;
-      }
-
-      const role = data.session.user.user_metadata?.role;
-
-      if (role === "HR") {
-        navigate("/hr/dashboard");
-      } else if (role === "CANDIDATE") {
-        navigate("/candidate/dashboard");
-      } else {
-        navigate("/select-role"); // Google user without role
+      if (data.session) {
+        navigate("/");
       }
     };
 
@@ -48,17 +38,10 @@ function Login() {
 
     if (error) {
       setError(error.message);
-    } else {
-      const role = data.user.user_metadata?.role;
-
-      if (role === "HR") {
-        navigate("/hr/dashboard");
-      } else if (role === "CANDIDATE") {
-        navigate("/candidate/dashboard");
-      } else {
-        navigate("/select-role");
-      }
+      return;
     }
+
+    navigate("/");
   };
 
   // 🔹 Google login
@@ -66,7 +49,7 @@ function Login() {
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: window.location.origin,
+        redirectTo: window.location.origin + "/login",
       },
     });
   };

@@ -6,12 +6,14 @@ import DashboardLayout from "./layouts/DashboardLayout";
 import HRDashboard from "./pages/hr/HRDashboard";
 import CandidateDashboard from "./pages/candidate/CandidateDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Landing from "./pages/Landing";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/select-role" element={<SelectRole />} />
 

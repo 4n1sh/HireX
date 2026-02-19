@@ -19,10 +19,8 @@ function SelectRole() {
       }
 
       const existingRole = data.session.user.user_metadata?.role;
-      if (existingRole === "HR") {
-        navigate("/hr/dashboard");
-      } else if (existingRole === "CANDIDATE") {
-        navigate("/candidate/dashboard");
+      if (existingRole) {
+        navigate("/");
       }
 
       const pendingRole = localStorage.getItem("pendingRole");
@@ -64,10 +62,8 @@ function SelectRole() {
 
     const updatedRole = data.user.user_metadata?.role;
 
-    if (updatedRole === "HR") {
-      navigate("/hr/dashboard");
-    } else {
-      navigate("/candidate/dashboard");
+    if (updatedRole) {
+      navigate("/");
     }
   };
 
