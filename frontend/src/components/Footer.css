@@ -12,3 +12,23 @@
   text-align: center;
   font-size: 14px;
 }
+
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.footer-logo-image {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  display: block;
+}
+
+.footer-logo-text {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ffffff;
+}

@@ -52,7 +52,10 @@ function Navbar() {
   return (
     <nav className="navbar">
       <div className="nav-container">
-        <h2 className="logo">HireX</h2>
+        <Link to="/" className="logo" aria-label="HireX home">
+          <img src="/logo.png" alt="HireX logo" className="logo-image" />
+          <span className="logo-text">HireX</span>
+        </Link>
 
         <div className="nav-links">
           {user ? (

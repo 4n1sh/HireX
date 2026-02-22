@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import SelectRole from "./pages/SelectRole";
 import DashboardLayout from "./layouts/DashboardLayout";
 import HRDashboard from "./pages/hr/HRDashboard";
 import CandidateDashboard from "./pages/candidate/CandidateDashboard";
@@ -15,7 +14,6 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/select-role" element={<SelectRole />} />
 
         <Route
           path="/hr"

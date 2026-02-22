@@ -15,7 +15,7 @@ function ProtectedRoute({ children, allowedRole }) {
         setSession(data.session);
 
         const role = data.session.user.user_metadata?.role;
-        setUserRole(role);
+        setUserRole(role || "CANDIDATE");
       }
 
       setLoading(false);
@@ -27,8 +27,6 @@ function ProtectedRoute({ children, allowedRole }) {
   if (loading) return <p>Loading...</p>;
 
   if (!session) return <Navigate to="/" />;
-
-  if (!userRole) return <Navigate to="/select-role" />;
 
   if (allowedRole && userRole !== allowedRole)
     return <Navigate to="/" />;
