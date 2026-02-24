@@ -18,7 +18,7 @@ function App() {
         <Route
           path="/hr"
           element={
-            <ProtectedRoute allowedRole="HR">
+            <ProtectedRoute allowedRole="hr">
               <DashboardLayout />
             </ProtectedRoute>
           }
@@ -29,7 +29,7 @@ function App() {
         <Route
           path="/candidate"
           element={
-            <ProtectedRoute allowedRole="CANDIDATE">
+            <ProtectedRoute allowedRole="candidate">
               <DashboardLayout />
             </ProtectedRoute>
           }

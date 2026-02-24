@@ -15,7 +15,7 @@ function ProtectedRoute({ children, allowedRole }) {
         setSession(data.session);
 
         const role = data.session.user.user_metadata?.role;
-        setUserRole(role || "CANDIDATE");
+        setUserRole(role || "candidate");
       }
 
       setLoading(false);

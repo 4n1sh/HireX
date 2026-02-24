@@ -5,6 +5,7 @@ import { supabase } from "../lib/supabase";
 function Login() {
   const navigate = useNavigate();
 
+  const [role, setRole] = useState("candidate");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -12,7 +13,7 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   const navigateByRole = (role) => {
-    if (role === "HR") {
+    if (role === "hr") {
       navigate("/hr/dashboard", { replace: true });
       return;
     }
@@ -23,13 +24,13 @@ function Login() {
   const ensureUserRole = async (user) => {
     const existingRole = user?.user_metadata?.role;
 
-    if (existingRole === "HR" || existingRole === "CANDIDATE") {
+    if (existingRole === "hr" || existingRole === "candidate") {
       return existingRole;
     }
 
     const pendingRole = localStorage.getItem("pendingRole");
     const pendingFullName = localStorage.getItem("pendingFullName");
-    const roleToSave = pendingRole === "HR" ? "HR" : "CANDIDATE";
+    const roleToSave = pendingRole === "hr" ? "hr" : "candidate";
 
     const { data, error: updateError } = await supabase.auth.updateUser({
       data: {
@@ -47,8 +48,28 @@ function Login() {
     return roleToSave;
   };
 
+  const upsertProfile = async (user, role) => {
+    const { error: upsertError } = await supabase
+      .from("profiles")
+      .upsert(
+        {
+          id: user.id,
+          full_name: user.user_metadata?.full_name || null,
+          avatar_url: user.user_metadata?.avatar_url || null,
+          role: role,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "id" }
+      );
+
+    if (upsertError) {
+      console.error("Profile upsert failed:", upsertError.message);
+    }
+  };
+
   const handleAuthenticatedUser = async (user) => {
     const role = await ensureUserRole(user);
+    await upsertProfile(user, role);
     navigateByRole(role);
   };
 
@@ -100,12 +121,18 @@ function Login() {
 
   // 🔹 Google login
   const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
+    localStorage.setItem("pendingRole", role);
+
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: window.location.origin + "/login",
       },
     });
+
+    if (oauthError) {
+      setError(oauthError.message);
+    }
   };
 
   return (
@@ -119,6 +146,39 @@ function Login() {
         </div>
 
         {error && <p className="error-text">{error}</p>}
+
+        <div className="role-toggle" role="radiogroup" aria-label="Select role">
+          <button
+            type="button"
+            className={`role-toggle-btn ${role === "candidate" ? "active" : ""}`}
+            onClick={() => setRole("candidate")}
+            aria-pressed={role === "candidate"}
+          >
+            <span className="role-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 12C14.2091 12 16 10.2091 16 8C16 5.79086 14.2091 4 12 4C9.79086 4 8 5.79086 8 8C8 10.2091 9.79086 12 12 12Z" fill="currentColor"/>
+                <path d="M19 20C19 16.6863 15.866 14 12 14C8.13401 14 5 16.6863 5 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </span>
+            I am a Candidate
+          </button>
+
+          <button
+            type="button"
+            className={`role-toggle-btn ${role === "hr" ? "active" : ""}`}
+            onClick={() => setRole("hr")}
+            aria-pressed={role === "hr"}
+          >
+            <span className="role-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="7" width="16" height="12" rx="2" stroke="currentColor" strokeWidth="2"/>
+                <path d="M9 7V5C9 4.44772 9.44772 4 10 4H14C14.5523 4 15 4.44772 15 5V7" stroke="currentColor" strokeWidth="2"/>
+                <path d="M4 12H20" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+            </span>
+            I am an HR/Recruiter
+          </button>
+        </div>
 
         <form onSubmit={handleLogin}>
           <label className="auth-label" htmlFor="login-email">Work Email</label>

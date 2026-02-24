@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 function Signup() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
-    role: "CANDIDATE",
+    role: "candidate",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -16,6 +17,35 @@ function Signup() {
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+
+  const navigateByRole = (role) => {
+    if (role === "hr") {
+      navigate("/hr/dashboard", { replace: true });
+      return;
+    }
+
+    navigate("/candidate/dashboard", { replace: true });
+  };
+
+  const upsertProfile = async (user, role) => {
+    const { error: upsertError } = await supabase
+      .from("profiles")
+      .upsert(
+        {
+          id: user.id,
+          full_name: user.user_metadata?.full_name || null,
+          avatar_url: user.user_metadata?.avatar_url || null,
+          role: role,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "id" }
+      );
+
+    if (upsertError) {
+      console.error("Profile upsert failed:", upsertError.message);
+    }
+  };
+
 const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
@@ -23,7 +53,7 @@ const handleSubmit = async (e) => {
 
   const { fullName, email, password, role } = formData;
 
-  const { error: signupError } = await supabase.auth.signUp({
+  const { data: signupData, error: signupError } = await supabase.auth.signUp({
     email: email,
     password,
     options: {
@@ -37,9 +67,29 @@ const handleSubmit = async (e) => {
 
   if (signupError) {
     setError(signupError.message);
-  } else {
-    alert("Signup successful! Check email if confirmation enabled.");
+    return;
   }
+
+  if (signupData.session?.user) {
+    const finalRole = signupData.user?.user_metadata?.role || role;
+    await upsertProfile(signupData.user, finalRole);
+    navigateByRole(finalRole);
+    return;
+  }
+
+  const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (loginError) {
+    setError(loginError.message);
+    return;
+  }
+
+  const finalRole = loginData.user?.user_metadata?.role || role;
+  await upsertProfile(loginData.user, finalRole);
+  navigateByRole(finalRole);
 };
 const handleGoogleSignup = async () => {
   localStorage.setItem("pendingRole", formData.role);
@@ -74,9 +124,9 @@ const handleGoogleSignup = async () => {
         <div className="role-toggle" role="radiogroup" aria-label="Select role">
           <button
             type="button"
-            className={`role-toggle-btn ${formData.role === "CANDIDATE" ? "active" : ""}`}
-            onClick={() => setFormData((prev) => ({ ...prev, role: "CANDIDATE" }))}
-            aria-pressed={formData.role === "CANDIDATE"}
+            className={`role-toggle-btn ${formData.role === "candidate" ? "active" : ""}`}
+            onClick={() => setFormData((prev) => ({ ...prev, role: "candidate" }))}
+            aria-pressed={formData.role === "candidate"}
           >
             <span className="role-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -89,9 +139,9 @@ const handleGoogleSignup = async () => {
 
           <button
             type="button"
-            className={`role-toggle-btn ${formData.role === "HR" ? "active" : ""}`}
-            onClick={() => setFormData((prev) => ({ ...prev, role: "HR" }))}
-            aria-pressed={formData.role === "HR"}
+            className={`role-toggle-btn ${formData.role === "hr" ? "active" : ""}`}
+            onClick={() => setFormData((prev) => ({ ...prev, role: "hr" }))}
+            aria-pressed={formData.role === "hr"}
           >
             <span className="role-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
