@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import "../pages/Landing.css";
 
 function LandingHeader() {
   const [user, setUser] = useState(null);
@@ -43,9 +44,12 @@ function LandingHeader() {
     setMenuOpen((prev) => !prev);
   };
 
+  const navigate = useNavigate();
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setMenuOpen(false);
+    navigate("/");
   };
 
   return (
@@ -57,8 +61,11 @@ function LandingHeader() {
         </Link>
 
         <nav className="header-nav" aria-label="Primary">
-          <a href="#home">Home</a>
-          <a href="#jobs">Jobs</a>
+          <Link to="/#home">Home</Link>
+          <Link to="/#jobs">Features</Link>
+          <Link to={user ? (user.user_metadata?.role === "hr" ? "/hr/jobs" : "/candidate/jobs") : "/login"}>
+            Jobs
+          </Link>
         </nav>
 
         {user ? (

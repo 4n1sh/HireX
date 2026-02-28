@@ -1,9 +1,9 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import DashboardLayout from "./layouts/DashboardLayout";
-import HRDashboard from "./pages/hr/HRDashboard";
-import CandidateDashboard from "./pages/candidate/CandidateDashboard";
+import HRJobs from "./pages/hr/HRJobs";
+import CandidateJobs from "./pages/candidate/CandidateJobs";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Landing from "./pages/Landing";
 
@@ -23,7 +23,8 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="dashboard" element={<HRDashboard />} />
+          <Route index element={<Navigate to="jobs" replace />} />
+          <Route path="jobs" element={<HRJobs />} />
         </Route>
 
         <Route
@@ -34,7 +35,8 @@ function App() {
             </ProtectedRoute>
           }
         >
-          <Route path="dashboard" element={<CandidateDashboard />} />
+          <Route index element={<Navigate to="jobs" replace />} />
+          <Route path="jobs" element={<CandidateJobs />} />
         </Route>
       </Routes>
     </BrowserRouter>

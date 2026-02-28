@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+
+# Virtual environment
+.venv/
+venv/
+
+# Environment variables
+.env
+.env.local
+
+# Uploads (user-uploaded resumes)
+uploads/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db

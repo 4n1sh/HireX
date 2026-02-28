@@ -18,13 +18,8 @@ function Signup() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const navigateByRole = (role) => {
-    if (role === "hr") {
-      navigate("/hr/dashboard", { replace: true });
-      return;
-    }
-
-    navigate("/candidate/dashboard", { replace: true });
+  const navigateByRole = () => {
+    navigate("/", { replace: true });
   };
 
   const upsertProfile = async (user, role) => {

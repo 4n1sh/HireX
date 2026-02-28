@@ -1,8 +1,18 @@
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import LandingHeader from "../components/LandingHeader";
 import LandingFooter from "../components/LandingFooter";
 import "./Landing.css";
 
 function Landing() {
+  const { hash } = useLocation();
+
+  useEffect(() => {
+    if (hash) {
+      const el = document.querySelector(hash);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [hash]);
   return (
     <div className="landing-page">
       <LandingHeader />
@@ -19,12 +29,12 @@ function Landing() {
             </p>
 
             <div className="hero-cta">
-              <button type="button" className="cta-primary">
+              <Link to="/candidate/jobs" className="cta-primary">
                 Apply for Jobs
-              </button>
-              <button type="button" className="cta-secondary">
+              </Link>
+              <Link to="/hr/jobs" className="cta-secondary">
                 Post a Job
-              </button>
+              </Link>
             </div>
 
             <div className="hero-glow hero-glow-left" />

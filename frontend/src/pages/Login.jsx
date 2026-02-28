@@ -12,13 +12,8 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const navigateByRole = (role) => {
-    if (role === "hr") {
-      navigate("/hr/dashboard", { replace: true });
-      return;
-    }
-
-    navigate("/candidate/dashboard", { replace: true });
+  const navigateByRole = () => {
+    navigate("/", { replace: true });
   };
 
   const ensureUserRole = async (user) => {
