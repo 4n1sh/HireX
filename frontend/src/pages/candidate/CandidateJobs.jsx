@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import { supabase } from "../../lib/supabase";
 import api from "../../api/axios";
 import "../Jobs.css";
 
@@ -14,16 +13,6 @@ function CandidateJobs() {
   const [search, setSearch] = useState("");
   const [resumeFile, setResumeFile] = useState(null);
   const fileRef = useRef(null);
-
-  const getHeaders = async () => {
-    const { data } = await supabase.auth.getSession();
-    const user = data.session?.user;
-    return {
-      "x-user-id": user?.id || "",
-      "x-user-role": user?.user_metadata?.role || "candidate",
-      "x-user-email": user?.email || "",
-    };
-  };
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -41,8 +30,7 @@ function CandidateJobs() {
 
   const fetchMyApplications = async () => {
     try {
-      const headers = await getHeaders();
-      const res = await api.get("/api/jobs/me/applications", { headers });
+      const res = await api.get("/api/jobs/me/applications");
       setAppliedIds(new Set(res.data.map((a) => a.job_id)));
     } catch {
       /* silent */
@@ -60,11 +48,10 @@ function CandidateJobs() {
     setApplyingTo(selectedJob.id);
     setError("");
     try {
-      const headers = await getHeaders();
       const fd = new FormData();
       fd.append("resume", resumeFile);
       await api.post(`/api/jobs/${selectedJob.id}/apply`, fd, {
-        headers: { ...headers, "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": "multipart/form-data" },
       });
       setAppliedIds((prev) => new Set([...prev, selectedJob.id]));
       setShowApplyForm(false);

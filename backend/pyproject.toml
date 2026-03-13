@@ -12,4 +12,6 @@ dependencies = [
   "python-dotenv",
   "pydantic",
   "python-multipart",
+  "python-jose[cryptography]",
+  "bcrypt",
 ]

@@ -6,6 +6,7 @@ import HRJobs from "./pages/hr/HRJobs";
 import CandidateJobs from "./pages/candidate/CandidateJobs";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Landing from "./pages/Landing";
+import Dashboard from "./pages/hr/Dashboard";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         >
           <Route index element={<Navigate to="jobs" replace />} />
           <Route path="jobs" element={<HRJobs />} />
+          <Route path="dashboard" element={<Dashboard />} />
         </Route>
 
         <Route

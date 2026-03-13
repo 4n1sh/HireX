@@ -1,35 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
 import "../pages/Landing.css";
 
 function LandingHeader() {
-  const [user, setUser] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const loadSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setUser(data.session?.user ?? null);
-    };
-
-    loadSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
+  const userJson = localStorage.getItem("user");
+  const user = userJson ? JSON.parse(userJson) : null;
 
   const userInitials = useMemo(() => {
     if (!user) return "";
 
-    const name = user.user_metadata?.full_name || user.email || "";
+    const name = user.full_name || user.email || "";
     const parts = name.trim().split(/\s+/).filter(Boolean);
 
     if (parts.length === 0) return "U";
@@ -38,16 +21,13 @@ function LandingHeader() {
     return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
   }, [user]);
 
-  const userAvatarUrl = user?.user_metadata?.avatar_url || "";
-
   const handleToggleMenu = () => {
     setMenuOpen((prev) => !prev);
   };
 
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
     setMenuOpen(false);
     navigate("/");
   };
@@ -56,14 +36,14 @@ function LandingHeader() {
     <header className="landing-header">
       <div className="landing-shell header-inner">
         <Link to="/" className="brand" aria-label="HireX Home">
-          <img src="/logo.png" alt="HireX logo" className="brand-logo" />
+          <img src="/logo.jpg" alt="HireX logo" className="brand-logo" />
           <span className="brand-text">HireX</span>
         </Link>
 
         <nav className="header-nav" aria-label="Primary">
           <Link to="/#home">Home</Link>
-          <Link to="/#jobs">Features</Link>
-          <Link to={user ? (user.user_metadata?.role === "hr" ? "/hr/jobs" : "/candidate/jobs") : "/login"}>
+          <Link to="/#features">Features</Link>
+          <Link to={user ? (user.role === "hr" ? "/hr/jobs" : "/candidate/jobs") : "/login"}>
             Jobs
           </Link>
         </nav>
@@ -78,15 +58,7 @@ function LandingHeader() {
               aria-label="User menu"
               aria-expanded={menuOpen}
             >
-              {userAvatarUrl ? (
-                <img
-                  src={userAvatarUrl}
-                  alt="User profile"
-                  className="landing-avatar-image"
-                />
-              ) : (
-                <span className="landing-avatar-initials">{userInitials}</span>
-              )}
+              <span className="landing-avatar-initials">{userInitials}</span>
             </button>
 
             {menuOpen && (

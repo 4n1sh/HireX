@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase } from "../lib/supabase";
+import api from "../api/axios";
 
 function Signup() {
   const navigate = useNavigate();
@@ -18,29 +18,6 @@ function Signup() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const navigateByRole = () => {
-    navigate("/", { replace: true });
-  };
-
-  const upsertProfile = async (user, role) => {
-    const { error: upsertError } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          id: user.id,
-          full_name: user.user_metadata?.full_name || null,
-          avatar_url: user.user_metadata?.avatar_url || null,
-          role: role,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "id" }
-      );
-
-    if (upsertError) {
-      console.error("Profile upsert failed:", upsertError.message);
-    }
-  };
-
 const handleSubmit = async (e) => {
   e.preventDefault();
   setLoading(true);
@@ -48,59 +25,22 @@ const handleSubmit = async (e) => {
 
   const { fullName, email, password, role } = formData;
 
-  const { data: signupData, error: signupError } = await supabase.auth.signUp({
-    email: email,
-    password,
-    options: {
-      data: {
-        full_name: fullName,
-        role: role,
-      },
-    },
-  });
-  setLoading(false);
+  try {
+    const { data } = await api.post("/api/auth/signup", {
+      full_name: fullName,
+      email,
+      password,
+      role,
+    });
 
-  if (signupError) {
-    setError(signupError.message);
-    return;
-  }
+    localStorage.setItem("token", data.access_token);
+    localStorage.setItem("user", JSON.stringify(data.user));
 
-  if (signupData.session?.user) {
-    const finalRole = signupData.user?.user_metadata?.role || role;
-    await upsertProfile(signupData.user, finalRole);
-    navigateByRole(finalRole);
-    return;
-  }
-
-  const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-
-  if (loginError) {
-    setError(loginError.message);
-    return;
-  }
-
-  const finalRole = loginData.user?.user_metadata?.role || role;
-  await upsertProfile(loginData.user, finalRole);
-  navigateByRole(finalRole);
-};
-const handleGoogleSignup = async () => {
-  localStorage.setItem("pendingRole", formData.role);
-  if (formData.fullName) {
-    localStorage.setItem("pendingFullName", formData.fullName);
-  }
-
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: window.location.origin + "/login",
-    },
-  });
-
-  if (error) {
-    setError(error.message);
+    navigate("/", { replace: true });
+  } catch (err) {
+    setError(err.response?.data?.detail || "Signup failed");
+  } finally {
+    setLoading(false);
   }
 };
 
@@ -225,22 +165,6 @@ const handleGoogleSignup = async () => {
             <span className="btn-arrow" aria-hidden="true">→</span>
           </button>
         </form>
-
-        <div className="divider">
-          <span>OR SIGN UP WITH</span>
-        </div>
-
-        <button className="google-btn" onClick={handleGoogleSignup}>
-          <span className="google-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path d="M21.805 12.23c0-.75-.067-1.47-.19-2.16H12v4.09h5.5a4.7 4.7 0 0 1-2.04 3.08v2.56h3.3c1.93-1.78 3.045-4.41 3.045-7.57Z" fill="#4285F4"/>
-              <path d="M12 22c2.7 0 4.96-.9 6.61-2.44l-3.3-2.56c-.91.61-2.08.98-3.31.98-2.54 0-4.69-1.71-5.46-4.01H3.13v2.62A9.99 9.99 0 0 0 12 22Z" fill="#34A853"/>
-              <path d="M6.54 13.97A5.99 5.99 0 0 1 6.23 12c0-.68.12-1.34.31-1.97V7.41H3.13A10 10 0 0 0 2 12c0 1.61.38 3.14 1.13 4.59l3.41-2.62Z" fill="#FBBC05"/>
-              <path d="M12 6.01c1.47 0 2.8.51 3.84 1.5l2.87-2.87C16.95 3.02 14.7 2 12 2a9.99 9.99 0 0 0-8.87 5.41l3.41 2.62c.77-2.3 2.92-4.02 5.46-4.02Z" fill="#EA4335"/>
-            </svg>
-          </span>
-          Google
-        </button>
 
         <p className="switch-auth">
           Already have an account? <Link to="/login">Log in</Link>
