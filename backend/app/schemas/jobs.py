@@ -53,9 +53,13 @@ class ApplicationOut(BaseModel):
     resume_path: str
     status: str
     similarity_score: Optional[float]
+    extracted_data: Optional[dict]
     hr_notes: Optional[str]
     applied_at: datetime
 
+    def scoring(self) -> str:
+        return "done" if self.similarity_score is not None else "in_progress"
+    
     class Config:
         from_attributes = True
 

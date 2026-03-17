@@ -4,9 +4,6 @@ import LandingHeader from "../components/LandingHeader";
 import LandingFooter from "../components/LandingFooter";
 import "./Landing.css";
 
-// Font Awesome CDN is loaded via index.html or public/index.html:
-// <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-
 const PHOTOS = {
   hero: "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=900&q=85&auto=format&fit=crop",
 

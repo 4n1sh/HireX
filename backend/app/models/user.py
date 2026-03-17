@@ -14,7 +14,6 @@ class User(Base):
     full_name = Column(Text, nullable=True)
     email = Column(Text, unique=True, nullable=False, index=True)
     hashed_password = Column(Text, nullable=False)
-    avatar_url = Column(Text, nullable=True)
     role = Column(Text, nullable=True, default="candidate")  # candidate | hr
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
