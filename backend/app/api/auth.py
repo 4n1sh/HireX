@@ -26,6 +26,11 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 
+def _ensure_not_blacklisted(user: User) -> None:
+    if user.is_blacklisted:
+        raise HTTPException(status_code=403, detail="Account is blacklisted")
+
+
 def _create_access_token(data: dict) -> str:
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -65,6 +70,8 @@ def get_current_user(
     if user is None:
         raise credentials_exception
 
+    _ensure_not_blacklisted(user)
+
     return _user_dict(user)
 
 
@@ -98,6 +105,8 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == body.email).first()
     if not user or not bcrypt.checkpw(body.password.encode(), user.hashed_password.encode()):
         raise HTTPException(status_code=401, detail="Incorrect email or password")
+
+    _ensure_not_blacklisted(user)
 
     token = _create_access_token({"sub": str(user.id)})
     return TokenResponse(access_token=token, user={**_user_dict(user), "id": str(user.id)})

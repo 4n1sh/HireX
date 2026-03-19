@@ -79,17 +79,38 @@ def _run_scoring(
 # CANDIDATE — OWN APPLICATIONS
 # ─────────────────────────────────────────
 
-@router.get("/me/applications", response_model=List[ApplicationOut])
+@router.get("/me/applications")
 def my_applications(
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return (
+    from sqlalchemy.orm import joinedload
+
+    apps = (
         db.query(Application)
+        .options(joinedload(Application.job))
         .filter(Application.candidate_id == user["id"])
         .order_by(Application.applied_at.desc())
         .all()
     )
+    return [
+        {
+            "id": str(a.id),
+            "job_id": str(a.job_id),
+            "candidate_id": str(a.candidate_id),
+            "resume_path": a.resume_path,
+            "status": a.status,
+            "similarity_score": a.similarity_score,
+            "extracted_data": a.extracted_data,
+            "hr_notes": a.hr_notes,
+            "applied_at": a.applied_at.isoformat() if a.applied_at else None,
+            "job_title": a.job.title if a.job else None,
+            "job_location": a.job.location if a.job else None,
+            "job_type": a.job.job_type if a.job else None,
+            "experience_level": a.job.experience_level if a.job else None,
+        }
+        for a in apps
+    ]
 
 
 # ─────────────────────────────────────────

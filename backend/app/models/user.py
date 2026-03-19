@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, DateTime, Text
+from sqlalchemy import Boolean, Column, DateTime, Text
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.db.database import Base
@@ -14,7 +14,8 @@ class User(Base):
     full_name = Column(Text, nullable=True)
     email = Column(Text, unique=True, nullable=False, index=True)
     hashed_password = Column(Text, nullable=False)
-    role = Column(Text, nullable=True, default="candidate")  # candidate | hr
+    role = Column(Text, nullable=True, default="candidate")  # candidate | hr | admin
+    is_blacklisted = Column(Boolean, default=False, server_default="false")
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc),
                         onupdate=lambda: datetime.now(timezone.utc))

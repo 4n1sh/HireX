@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { Link } from "react-router-dom";
 import api from "../../api/axios";
 import "../Jobs.css";
 
@@ -6,11 +7,13 @@ function CandidateJobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [appliedIds, setAppliedIds] = useState(new Set());
+  const [applications, setApplications] = useState({}); // job_id -> application
   const [applyingTo, setApplyingTo] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [search, setSearch] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterLevel, setFilterLevel] = useState("");
   const [resumeFile, setResumeFile] = useState(null);
   const fileRef = useRef(null);
 
@@ -31,7 +34,9 @@ function CandidateJobs() {
   const fetchMyApplications = async () => {
     try {
       const res = await api.get("/api/jobs/me/applications");
-      setAppliedIds(new Set(res.data.map((a) => a.job_id)));
+      const map = {};
+      res.data.forEach((a) => { map[a.job_id] = a; });
+      setApplications(map);
     } catch {
       /* silent */
     }
@@ -42,6 +47,16 @@ function CandidateJobs() {
     fetchMyApplications();
   }, []);
 
+  // Poll for pending similarity scores
+  useEffect(() => {
+    const hasPending = Object.values(applications).some(
+      (a) => a.similarity_score == null
+    );
+    if (!hasPending) return;
+    const interval = setInterval(fetchMyApplications, 4000);
+    return () => clearInterval(interval);
+  }, [applications]);
+
   const handleApply = async (e) => {
     e.preventDefault();
     if (!resumeFile) return;
@@ -50,10 +65,10 @@ function CandidateJobs() {
     try {
       const fd = new FormData();
       fd.append("resume", resumeFile);
-      await api.post(`/api/jobs/${selectedJob.id}/apply`, fd, {
+      const res = await api.post(`/api/jobs/${selectedJob.id}/apply`, fd, {
         headers: { "Content-Type": "multipart/form-data" },
       });
-      setAppliedIds((prev) => new Set([...prev, selectedJob.id]));
+      setApplications((prev) => ({ ...prev, [selectedJob.id]: res.data }));
       setShowApplyForm(false);
       setResumeFile(null);
     } catch (err) {
@@ -65,11 +80,20 @@ function CandidateJobs() {
 
   const filteredJobs = jobs.filter((j) => {
     const q = search.toLowerCase();
-    return (
+    const matchesSearch =
       j.title.toLowerCase().includes(q) ||
-      (j.location || "").toLowerCase().includes(q)
-    );
+      (j.location || "").toLowerCase().includes(q);
+    const matchesType = !filterType || j.job_type === filterType;
+    const matchesLevel = !filterLevel || j.experience_level === filterLevel;
+    return matchesSearch && matchesType && matchesLevel;
   });
+
+  // Clear selected job if it's no longer in filtered results
+  useEffect(() => {
+    if (selectedJob && !filteredJobs.find((j) => j.id === selectedJob.id)) {
+      setSelectedJob(filteredJobs[0] || null);
+    }
+  }, [filterType, filterLevel, search]);
 
   const typeLabel = (t) =>
     ({ full_time: "Full-time", part_time: "Part-time", contract: "Contract", internship: "Internship" })[t] || t;
@@ -88,27 +112,54 @@ function CandidateJobs() {
     return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
   };
 
+  const app = applications[selectedJob?.id]; // current job's application
+
   return (
-    <div className="jobs-page">
+    <div className="jobs-page candidate-jobs">
 
       {/* ── Top Bar ── */}
       <div className="jobs-topbar">
-        <div className="jobs-topbar-left">
-          <h1>Jobs</h1>
-          <p>
-            {filteredJobs.length} result{filteredJobs.length !== 1 ? "s" : ""}
-          </p>
+        <div className="topbar-left">
+          <div className="jobs-search">
+            <i className="fa-solid fa-magnifying-glass" />
+            <input
+              type="text"
+              placeholder="Search jobs..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+
+          <div className="jobs-filters">
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">All Types</option>
+              <option value="full_time">Full-time</option>
+              <option value="part_time">Part-time</option>
+              <option value="contract">Contract</option>
+              <option value="internship">Internship</option>
+            </select>
+
+            <select
+              value={filterLevel}
+              onChange={(e) => setFilterLevel(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">All Levels</option>
+              <option value="entry">Entry Level</option>
+              <option value="mid">Mid Level</option>
+              <option value="senior">Senior</option>
+              <option value="lead">Lead</option>
+            </select>
+          </div>
         </div>
 
-        <div className="jobs-search">
-          <i className="fa-solid fa-magnifying-glass" />
-          <input
-            type="text"
-            placeholder="Search by title or location"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+        <Link to="/candidate/applications" className="btn-outline" style={{ whiteSpace: "nowrap", fontSize: 13, padding: "7px 16px" }}>
+          <i className="fa-solid fa-file-lines" /> My Applications
+        </Link>
       </div>
 
       {/* ── Error Bar ── */}
@@ -122,58 +173,65 @@ function CandidateJobs() {
       {/* ── Loading ── */}
       {loading ? (
         <p className="jobs-loading">Loading jobs...</p>
-      ) : filteredJobs.length === 0 ? (
-        <div className="jobs-empty">
-          <i className="fa-solid fa-briefcase" />
-          <p>No open positions found</p>
-        </div>
       ) : (
-        <div className="jobs-body">
-
+        <>
           {/* ── Left: List ── */}
           <div className="jobs-list-col">
-            {filteredJobs.map((job) => (
-              <div
-                key={job.id}
-                className={`job-card${selectedJob?.id === job.id ? " active" : ""}`}
-                onClick={() => {
-                  setSelectedJob(job);
-                  setShowApplyForm(false);
-                  setResumeFile(null);
-                }}
-              >
-                <div className="job-card-avatar">{job.title.charAt(0)}</div>
-                <div className="job-card-body">
-                  <h4 className="job-card-title">{job.title}</h4>
-                  <div className="job-card-sub">
-                    {job.location && (
-                      <span>
-                        <i className="fa-solid fa-location-dot" />
-                        {job.location}
-                      </span>
-                    )}
-                  </div>
-                  <div className="job-card-tags">
-                    {job.job_type && (
-                      <span className={`tag ${typeTag(job.job_type)}`}>
-                        {typeLabel(job.job_type)}
-                      </span>
-                    )}
-                    {job.experience_level && (
-                      <span className="tag tag-gray">
-                        {levelLabel(job.experience_level)}
-                      </span>
-                    )}
-                    {appliedIds.has(job.id) && (
-                      <span className="tag-applied">
-                        <i className="fa-solid fa-circle-check" /> Applied
-                      </span>
-                    )}
+            <div className="jobs-list-header">
+              <span className="jobs-count">
+                {filteredJobs.length} job{filteredJobs.length !== 1 ? "s" : ""} found
+              </span>
+            </div>
+            {filteredJobs.length === 0 ? (
+              <div className="jobs-empty">
+                <i className="fa-solid fa-briefcase" />
+                <p>No matching jobs</p>
+              </div>
+            ) : filteredJobs.map((job) => {
+              const jobApp = applications[job.id];
+              return (
+                <div
+                  key={job.id}
+                  className={`job-card${selectedJob?.id === job.id ? " active" : ""}`}
+                  onClick={() => {
+                    setSelectedJob(job);
+                    setShowApplyForm(false);
+                    setResumeFile(null);
+                  }}
+                >
+                  <div className="job-card-avatar">{job.title.charAt(0)}</div>
+                  <div className="job-card-body">
+                    <h4 className="job-card-title">{job.title}</h4>
+                    <div className="job-card-sub">
+                      {job.location && (
+                        <span>
+                          <i className="fa-solid fa-location-dot" />
+                          {job.location}
+                        </span>
+                      )}
+                      <span className="job-card-time">{timeAgo(job.created_at)}</span>
+                    </div>
+                    <div className="job-card-tags">
+                      {job.job_type && (
+                        <span className={`tag ${typeTag(job.job_type)}`}>
+                          {typeLabel(job.job_type)}
+                        </span>
+                      )}
+                      {jobApp && (
+                        <span className="tag-applied">
+                          <i className="fa-solid fa-circle-check" /> Applied
+                          {jobApp.similarity_score != null && (
+                            <span className="match-badge">
+                              · {Math.round(jobApp.similarity_score)}% match
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <span className="job-card-time">{timeAgo(job.created_at)}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* ── Right: Detail ── */}
@@ -181,36 +239,32 @@ function CandidateJobs() {
             {selectedJob ? (
               <div className="detail-inner">
 
-                {/* Header card */}
-                <div className="detail-head">
-                  <div className="detail-head-top">
-                    <div className="detail-avatar">{selectedJob.title.charAt(0)}</div>
-                    <div className="detail-head-info">
-                      <h2>{selectedJob.title}</h2>
+                {/* Header */}
+                <div className="detail-header-row">
+                  <div className="detail-avatar">{selectedJob.title.charAt(0)}</div>
+                  <div className="detail-header-info">
+                    <h2>{selectedJob.title}</h2>
+                    <div className="detail-meta">
                       {selectedJob.location && (
-                        <p className="detail-location">
+                        <span>
                           <i className="fa-solid fa-location-dot" />
                           {selectedJob.location}
-                        </p>
+                        </span>
+                      )}
+                      {selectedJob.job_type && (
+                        <span className={`tag ${typeTag(selectedJob.job_type)}`}>
+                          {typeLabel(selectedJob.job_type)}
+                        </span>
+                      )}
+                      {selectedJob.experience_level && (
+                        <span className="tag tag-gray">
+                          {levelLabel(selectedJob.experience_level)}
+                        </span>
                       )}
                     </div>
                   </div>
-
-                  <div className="detail-tags">
-                    {selectedJob.job_type && (
-                      <span className={`tag ${typeTag(selectedJob.job_type)}`}>
-                        {typeLabel(selectedJob.job_type)}
-                      </span>
-                    )}
-                    {selectedJob.experience_level && (
-                      <span className="tag tag-gray">
-                        {levelLabel(selectedJob.experience_level)}
-                      </span>
-                    )}
-                  </div>
-
                   <div className="detail-actions">
-                    {appliedIds.has(selectedJob.id) ? (
+                    {app ? (
                       <button className="btn-success">
                         <i className="fa-solid fa-circle-check" /> Applied
                       </button>
@@ -220,14 +274,14 @@ function CandidateJobs() {
                         onClick={() => setShowApplyForm(!showApplyForm)}
                       >
                         <i className="fa-solid fa-bolt" />
-                        {showApplyForm ? "Cancel" : "Easy Apply"}
+                        {showApplyForm ? "Cancel" : "Quick Apply"}
                       </button>
                     )}
                   </div>
                 </div>
 
                 {/* Apply form */}
-                {showApplyForm && !appliedIds.has(selectedJob.id) && (
+                {showApplyForm && !app && (
                   <div className="apply-card">
                     <p className="apply-card-title">
                       <i className="fa-solid fa-file-arrow-up" />
@@ -285,52 +339,78 @@ function CandidateJobs() {
                   </div>
                 )}
 
-                {/* Job details card */}
-                <div className="detail-card">
-                  <p className="detail-card-title">Job Details</p>
-                  <div className="info-grid">
-                    {selectedJob.job_type && (
-                      <div className="info-cell">
-                        <span className="info-cell-label">Job Type</span>
-                        <span className="info-cell-value">
-                          {typeLabel(selectedJob.job_type)}
-                        </span>
-                      </div>
-                    )}
-                    {selectedJob.experience_level && (
-                      <div className="info-cell">
-                        <span className="info-cell-label">Experience</span>
-                        <span className="info-cell-value">
-                          {levelLabel(selectedJob.experience_level)}
-                        </span>
-                      </div>
-                    )}
-                    {selectedJob.location && (
-                      <div className="info-cell">
-                        <span className="info-cell-label">Location</span>
-                        <span className="info-cell-value">{selectedJob.location}</span>
-                      </div>
-                    )}
-                    {selectedJob.deadline && (
-                      <div className="info-cell">
-                        <span className="info-cell-label">Deadline</span>
-                        <span className="info-cell-value">{selectedJob.deadline}</span>
-                      </div>
-                    )}
-                    <div className="info-cell">
-                      <span className="info-cell-label">Posted</span>
-                      <span className="info-cell-value">
-                        {timeAgo(selectedJob.created_at)}
-                      </span>
+                {/* ── Match score card ── */}
+                {app && app.similarity_score != null && (
+                  <div className="match-card">
+                    <p className="detail-card-title">Resume Match</p>
+                    <div className="match-overall">
+                      <div className="match-ring">{Math.round(app.similarity_score)}%</div>
+                      <span className="match-overall-label">Overall Match</span>
                     </div>
+                    {app.extracted_data?.breakdown && (
+                      <div className="match-breakdown">
+                        {Object.entries(app.extracted_data.breakdown).map(([key, val]) => (
+                          <div key={key} className="match-bar-row">
+                            <span className="match-label">{key}</span>
+                            <div className="match-bar">
+                              <div className="match-bar-fill" style={{ width: `${val}%` }} />
+                            </div>
+                            <span className="match-value">{Math.round(val)}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
+                {app && app.similarity_score == null && (
+                  <div className="match-card match-scoring">
+                    <i className="fa-solid fa-spinner fa-spin" />
+                    <span>Analyzing your resume match…</span>
+                  </div>
+                )}
 
-                {/* Description card */}
+                {/* Description */}
                 <div className="detail-card">
-                  <p className="detail-card-title">Description</p>
+                  <p className="detail-card-title">Job Description</p>
                   <p className="detail-description">{selectedJob.description}</p>
                 </div>
+
+                {/* Job details */}
+                {(selectedJob.deadline || selectedJob.created_at) && (
+                  <div className="detail-card">
+                    <p className="detail-card-title">Details</p>
+                    <div className="detail-info-list">
+                      {selectedJob.job_type && (
+                        <div className="detail-info-item">
+                          <span className="detail-info-label">Type</span>
+                          <span className="detail-info-value">{typeLabel(selectedJob.job_type)}</span>
+                        </div>
+                      )}
+                      {selectedJob.experience_level && (
+                        <div className="detail-info-item">
+                          <span className="detail-info-label">Level</span>
+                          <span className="detail-info-value">{levelLabel(selectedJob.experience_level)}</span>
+                        </div>
+                      )}
+                      {selectedJob.location && (
+                        <div className="detail-info-item">
+                          <span className="detail-info-label">Location</span>
+                          <span className="detail-info-value">{selectedJob.location}</span>
+                        </div>
+                      )}
+                      {selectedJob.deadline && (
+                        <div className="detail-info-item">
+                          <span className="detail-info-label">Deadline</span>
+                          <span className="detail-info-value">{selectedJob.deadline}</span>
+                        </div>
+                      )}
+                      <div className="detail-info-item">
+                        <span className="detail-info-label">Posted</span>
+                        <span className="detail-info-value">{timeAgo(selectedJob.created_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
               </div>
             ) : (
@@ -340,8 +420,7 @@ function CandidateJobs() {
               </div>
             )}
           </div>
-
-        </div>
+        </>
       )}
     </div>
   );

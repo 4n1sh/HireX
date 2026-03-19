@@ -21,6 +21,34 @@ function LandingHeader() {
     return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
   }, [user]);
 
+  const navLinks = useMemo(() => {
+    if (!user) {
+      return [
+        { to: "/#home", label: "Home" },
+        { to: "/#features", label: "Features" },
+        { to: "/login", label: "Jobs" },
+      ];
+    }
+    switch (user.role) {
+      case "admin":
+        return [
+          { to: "/admin/dashboard", label: "Dashboard" },
+          { to: "/admin/users", label: "Users" },
+        ];
+      case "hr":
+        return [
+          { to: "/hr/dashboard", label: "Dashboard" },
+          { to: "/hr/jobs", label: "Jobs" },
+        ];
+      case "candidate":
+      default:
+        return [
+          { to: "/candidate/jobs", label: "Jobs" },
+          { to: "/candidate/applications", label: "My Applications" },
+        ];
+    }
+  }, [user]);
+
   const handleToggleMenu = () => {
     setMenuOpen((prev) => !prev);
   };
@@ -41,11 +69,9 @@ function LandingHeader() {
         </Link>
 
         <nav className="header-nav" aria-label="Primary">
-          <Link to="/#home">Home</Link>
-          <Link to="/#features">Features</Link>
-          <Link to={user ? (user.role === "hr" ? "/hr/jobs" : "/candidate/jobs") : "/login"}>
-            Jobs
-          </Link>
+          {navLinks.map(({ to, label }) => (
+            <Link key={to} to={to}>{label}</Link>
+          ))}
         </nav>
 
         {user ? (

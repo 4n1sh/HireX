@@ -8,6 +8,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.auth import router as auth_router
 from app.api.jobs import router as jobs_router
+from app.api.admin import router as admin_router
 
 app = FastAPI(title="HireX API")
 
@@ -21,6 +22,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(jobs_router)
+app.include_router(admin_router)
 
 
 @app.exception_handler(Exception)

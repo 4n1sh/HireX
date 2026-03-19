@@ -8,7 +8,7 @@ function Dashboard({ role: roleProp }) {
   const firstName = user.name?.split(" ")[0] || (isHR ? "Recruiter" : "there");
 
   return (
-    <div className="dashboard-page">
+    <div className="dashboard-page" style={{ maxWidth: 1128, margin: "0 auto", padding: "24px 16px" }}>
 
       {/* ── Hero banner ── */}
       <div className="dash-hero">

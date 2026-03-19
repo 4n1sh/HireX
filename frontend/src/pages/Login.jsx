@@ -22,7 +22,11 @@ function Login() {
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      navigate("/", { replace: true });
+      const role = data.user?.role;
+      const dest = role === "admin" ? "/admin/dashboard"
+                 : role === "hr" ? "/hr/jobs"
+                 : "/candidate/jobs";
+      navigate(dest, { replace: true });
     } catch (err) {
       setError(err.response?.data?.detail || "Login failed");
     } finally {
