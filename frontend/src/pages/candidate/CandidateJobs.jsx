@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import api from "../../api/axios";
 import "../Jobs.css";
+import LandingHeader from "../../components/LandingHeader";
 
 function CandidateJobs() {
   const [jobs, setJobs] = useState([]);
@@ -118,6 +119,8 @@ function CandidateJobs() {
   const gap = app?.extracted_data?.skill_gap;
 
   return (
+    <>
+    <LandingHeader />
     <div className="jobs-page candidate-jobs">
 
       {/* ── Top Bar ── */}
@@ -454,6 +457,7 @@ function CandidateJobs() {
         </>
       )}
     </div>
+    </>
   );
 }
 

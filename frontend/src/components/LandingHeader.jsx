@@ -43,6 +43,7 @@ function LandingHeader() {
       case "candidate":
       default:
         return [
+          { to: "/", label: "Home" },
           { to: "/candidate/jobs", label: "Jobs" },
           { to: "/candidate/applications", label: "My Applications" },
         ];

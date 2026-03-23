@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
 import "../pages/Jobs.css";
 
 function CandidateLayout() {
@@ -26,7 +26,7 @@ function CandidateLayout() {
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar">
-        <div className="admin-sidebar-logo">
+        <Link to="/" className="admin-sidebar-logo" style={{ textDecoration: "none" }}>
           <img
             src="/logo.jpg"
             alt="HireX logo"
@@ -36,7 +36,7 @@ function CandidateLayout() {
             <div className="admin-sidebar-logo-text">HireX</div>
             <div className="admin-sidebar-logo-badge candidate-badge">Candidate</div>
           </div>
-        </div>
+        </Link>
 
         <nav className="admin-sidebar-nav">
           <div className="admin-nav-section">Jobs</div>

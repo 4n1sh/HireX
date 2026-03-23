@@ -37,7 +37,7 @@ function App() {
           }
         />
 
-        {/* Candidate — sidebar layout */}
+        {/* Candidate — jobs is standalone (no sidebar), applications uses sidebar */}
         <Route
           path="/candidate"
           element={
@@ -46,9 +46,9 @@ function App() {
             </ProtectedRoute>
           }
         >
+          <Route index element={<Navigate to="jobs" replace />} />
+          <Route path="jobs" element={<CandidateJobs />} />
           <Route element={<CandidateLayout />}>
-            <Route index element={<Navigate to="jobs" replace />} />
-            <Route path="jobs" element={<CandidateJobs />} />
             <Route path="applications" element={<MyApplications />} />
           </Route>
         </Route>
