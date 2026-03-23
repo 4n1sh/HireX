@@ -1,26 +1,18 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import LandingHeader from "./components/LandingHeader";
 import HRJobs from "./pages/hr/HRJobs";
+import HRDashboard from "./pages/hr/HRDashboard";
 import CandidateJobs from "./pages/candidate/CandidateJobs";
 import MyApplications from "./pages/candidate/MyApplications";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Landing from "./pages/Landing";
-import Dashboard from "./pages/hr/Dashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminLayout from "./layouts/AdminLayout";
+import HRLayout from "./layouts/HRLayout";
+import CandidateLayout from "./layouts/CandidateLayout";
 import PublicRoute from "./components/PublicRoute";
-
-function AppLayout() {
-  return (
-    <>
-      <LandingHeader />
-      <Outlet />
-    </>
-  );
-}
 
 function App() {
   return (
@@ -45,36 +37,39 @@ function App() {
           }
         />
 
-        {/* HR + Candidate — top nav layout */}
-        <Route element={<AppLayout />}>
-          <Route
-            path="/hr"
-            element={
-              <ProtectedRoute allowedRole="hr">
-                <Outlet />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<Navigate to="jobs" replace />} />
-            <Route path="jobs" element={<HRJobs />} />
-            <Route path="dashboard" element={<Dashboard />} />
-          </Route>
-
-          <Route
-            path="/candidate"
-            element={
-              <ProtectedRoute allowedRole="candidate">
-                <Outlet />
-              </ProtectedRoute>
-            }
-          >
+        {/* Candidate — sidebar layout */}
+        <Route
+          path="/candidate"
+          element={
+            <ProtectedRoute allowedRole="candidate">
+              <Outlet />
+            </ProtectedRoute>
+          }
+        >
+          <Route element={<CandidateLayout />}>
             <Route index element={<Navigate to="jobs" replace />} />
             <Route path="jobs" element={<CandidateJobs />} />
             <Route path="applications" element={<MyApplications />} />
           </Route>
         </Route>
 
-        {/* Admin — sidebar layout, no LandingHeader */}
+        {/* HR — sidebar layout, like admin */}
+        <Route
+          path="/hr"
+          element={
+            <ProtectedRoute allowedRole="hr">
+              <Outlet />
+            </ProtectedRoute>
+          }
+        >
+          <Route element={<HRLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<HRDashboard />} />
+            <Route path="jobs" element={<HRJobs />} />
+          </Route>
+        </Route>
+
+        {/* Admin — sidebar layout */}
         <Route
           path="/admin"
           element={

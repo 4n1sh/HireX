@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from "react";
-import { Link } from "react-router-dom";
 import api from "../../api/axios";
 import "../Jobs.css";
 
@@ -7,7 +6,7 @@ function CandidateJobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [applications, setApplications] = useState({}); // job_id -> application
+  const [applications, setApplications] = useState({});
   const [applyingTo, setApplyingTo] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
   const [showApplyForm, setShowApplyForm] = useState(false);
@@ -15,6 +14,7 @@ function CandidateJobs() {
   const [filterType, setFilterType] = useState("");
   const [filterLevel, setFilterLevel] = useState("");
   const [resumeFile, setResumeFile] = useState(null);
+  const [gapOpen, setGapOpen] = useState(false);
   const fileRef = useRef(null);
 
   const fetchJobs = async () => {
@@ -57,6 +57,9 @@ function CandidateJobs() {
     return () => clearInterval(interval);
   }, [applications]);
 
+  // Reset gap open when job changes
+  useEffect(() => { setGapOpen(false); }, [selectedJob]);
+
   const handleApply = async (e) => {
     e.preventDefault();
     if (!resumeFile) return;
@@ -88,7 +91,6 @@ function CandidateJobs() {
     return matchesSearch && matchesType && matchesLevel;
   });
 
-  // Clear selected job if it's no longer in filtered results
   useEffect(() => {
     if (selectedJob && !filteredJobs.find((j) => j.id === selectedJob.id)) {
       setSelectedJob(filteredJobs[0] || null);
@@ -112,7 +114,8 @@ function CandidateJobs() {
     return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
   };
 
-  const app = applications[selectedJob?.id]; // current job's application
+  const app = applications[selectedJob?.id];
+  const gap = app?.extracted_data?.skill_gap;
 
   return (
     <div className="jobs-page candidate-jobs">
@@ -156,10 +159,6 @@ function CandidateJobs() {
             </select>
           </div>
         </div>
-
-        <Link to="/candidate/applications" className="btn-outline" style={{ whiteSpace: "nowrap", fontSize: 13, padding: "7px 16px" }}>
-          <i className="fa-solid fa-file-lines" /> My Applications
-        </Link>
       </div>
 
       {/* ── Error Bar ── */}
@@ -339,33 +338,65 @@ function CandidateJobs() {
                   </div>
                 )}
 
-                {/* ── Match score card ── */}
-                {app && app.similarity_score != null && (
-                  <div className="match-card">
-                    <p className="detail-card-title">Resume Match</p>
-                    <div className="match-overall">
+                {/* ── Match score ── */}
+                {app && (
+                  <div className="match-ring-wrap">
+                    {app.similarity_score != null ? (
                       <div className="match-ring">{Math.round(app.similarity_score)}%</div>
-                      <span className="match-overall-label">Overall Match</span>
-                    </div>
-                    {app.extracted_data?.breakdown && (
-                      <div className="match-breakdown">
-                        {Object.entries(app.extracted_data.breakdown).map(([key, val]) => (
-                          <div key={key} className="match-bar-row">
-                            <span className="match-label">{key}</span>
-                            <div className="match-bar">
-                              <div className="match-bar-fill" style={{ width: `${val}%` }} />
-                            </div>
-                            <span className="match-value">{Math.round(val)}%</span>
-                          </div>
-                        ))}
+                    ) : (
+                      <div className="match-ring scoring">
+                        <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: 14 }} />
                       </div>
                     )}
+                    <span className="match-ring-label">Resume Match</span>
                   </div>
                 )}
-                {app && app.similarity_score == null && (
-                  <div className="match-card match-scoring">
-                    <i className="fa-solid fa-spinner fa-spin" />
-                    <span>Analyzing your resume match…</span>
+
+                {/* ── Skill Gap ── */}
+                {gap && (
+                  <div className="skill-gap-section">
+                    <button
+                      className="skill-gap-toggle"
+                      onClick={() => setGapOpen((v) => !v)}
+                    >
+                      <i className="fa-solid fa-magnifying-glass-chart" />
+                      Skill Gap Analysis
+                      <i className={`fa-solid fa-chevron-${gapOpen ? "up" : "down"} sgap-chevron`} />
+                    </button>
+                    {gapOpen && (
+                      <div className="skill-gap-body">
+                        {gap.matched?.length > 0 && (
+                          <div className="skill-gap-row">
+                            <span className="skill-gap-label matched">Matched</span>
+                            <div className="skill-tags">
+                              {gap.matched.map((s) => (
+                                <span key={s} className="skill-tag matched">{s}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {gap.partial?.length > 0 && (
+                          <div className="skill-gap-row">
+                            <span className="skill-gap-label partial">Partial</span>
+                            <div className="skill-tags">
+                              {gap.partial.map((s) => (
+                                <span key={s} className="skill-tag partial">{s}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {gap.missing?.length > 0 && (
+                          <div className="skill-gap-row">
+                            <span className="skill-gap-label missing">Missing</span>
+                            <div className="skill-tags">
+                              {gap.missing.map((s) => (
+                                <span key={s} className="skill-tag missing">{s}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 

@@ -14,7 +14,7 @@ from app.db.database import get_db, SessionLocal          # <-- import SessionLo
 from app.models.application import Application
 from app.models.job import JobPosting
 from app.schemas.jobs import ApplicationOut, JobCreate, JobOut, JobUpdate
-from app.services.resume_scorer import score_resume_against_job
+from app.services.resume_scorer import score_resume_against_job, analyze_skill_gap
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
@@ -51,13 +51,17 @@ def _run_scoring(
             cached_job_sections=cached_job_sections,
         )
 
+        # Compute skill gap
+        skill_gap = analyze_skill_gap(result["resume_extracted"], result["job_extracted"])
+
         # Update application
         app = db.query(Application).filter(Application.id == application_id).first()
         if app:
             app.similarity_score = result["similarity_score"]
             app.extracted_data   = {
-                "sections":  result["resume_extracted"],
-                "breakdown": result["breakdown"],
+                "sections":   result["resume_extracted"],
+                "breakdown":  result["breakdown"],
+                "skill_gap":  skill_gap,
             }
 
         # Update job extracted_requirements only if not already set
