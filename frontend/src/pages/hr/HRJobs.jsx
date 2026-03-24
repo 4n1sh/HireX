@@ -34,6 +34,7 @@ function HRJobs() {
   const [loadingApps, setLoadingApps] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(null); // app id being updated
   const [skillGapOpen, setSkillGapOpen] = useState({}); // app id -> bool
+  const [statusToast, setStatusToast] = useState(null); // { message, type }
 
   // Edit
   const [editingId, setEditingId] = useState(null);
@@ -128,6 +129,11 @@ function HRJobs() {
     }
   };
 
+  const showToast = (message, type = "success") => {
+    setStatusToast({ message, type });
+    setTimeout(() => setStatusToast(null), 3500);
+  };
+
   const handleStatusChange = async (appId, newStatus) => {
     setUpdatingStatus(appId);
     try {
@@ -135,8 +141,9 @@ function HRJobs() {
       setApplications((prev) =>
         prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a))
       );
+      showToast("Status updated — email sent to candidate");
     } catch {
-      /* silent */
+      showToast("Failed to update status", "error");
     } finally {
       setUpdatingStatus(null);
     }
@@ -178,6 +185,20 @@ function HRJobs() {
 
   return (
     <div className="admin-page-content">
+      {/* Status toast */}
+      {statusToast && (
+        <div style={{
+          position: "fixed", bottom: 24, right: 24, zIndex: 9999,
+          background: statusToast.type === "error" ? "#ef4444" : "#22c55e",
+          color: "#fff", padding: "12px 20px", borderRadius: 8,
+          boxShadow: "0 4px 16px rgba(0,0,0,.2)", fontSize: 14, fontWeight: 500,
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <i className={`fas ${statusToast.type === "error" ? "fa-circle-xmark" : "fa-circle-check"}`} />
+          {statusToast.message}
+        </div>
+      )}
+
       {/* Top bar */}
       <div className="admin-page-topbar">
         <div>

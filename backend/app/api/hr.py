@@ -2,7 +2,7 @@
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -11,6 +11,8 @@ from app.api.auth import get_current_user
 from app.db.database import get_db
 from app.models.application import Application
 from app.models.job import JobPosting
+from app.models.user import User
+from app.services.email_service import send_status_email
 
 
 class StatusUpdate(BaseModel):
@@ -108,6 +110,7 @@ def hr_recent_applications(
 def update_application_status(
     application_id: UUID,
     body: StatusUpdate,
+    background_tasks: BackgroundTasks,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -129,5 +132,16 @@ def update_application_status(
     if body.hr_notes is not None:
         app.hr_notes = body.hr_notes
     db.commit()
+
+    # Fire email notification in background (non-blocking)
+    candidate = db.query(User).filter(User.id == app.candidate_id).first()
+    if candidate:
+        background_tasks.add_task(
+            send_status_email,
+            to_email=candidate.email,
+            candidate_name=candidate.full_name or candidate.email.split("@")[0],
+            job_title=job.title,
+            status=body.status,
+        )
 
     return {"id": str(app.id), "status": app.status}
