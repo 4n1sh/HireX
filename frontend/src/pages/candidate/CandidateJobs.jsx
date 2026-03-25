@@ -16,6 +16,8 @@ function CandidateJobs() {
   const [filterLevel, setFilterLevel] = useState("");
   const [resumeFile, setResumeFile] = useState(null);
   const [gapOpen, setGapOpen] = useState(false);
+  const [coverLetter, setCoverLetter] = useState(null); // { text, pdfUrl, loading }
+  const [clPreview, setClPreview] = useState(false);
   const fileRef = useRef(null);
 
   const fetchJobs = async () => {
@@ -58,8 +60,91 @@ function CandidateJobs() {
     return () => clearInterval(interval);
   }, [applications]);
 
-  // Reset gap open when job changes
-  useEffect(() => { setGapOpen(false); }, [selectedJob]);
+  // Reset gap open + cover letter when job changes
+  useEffect(() => { setGapOpen(false); setCoverLetter(null); setClPreview(false); }, [selectedJob]);
+
+  const buildCoverLetterPdf = (text, candidateName, jobTitle) => {
+    // Minimal PDF builder — no external deps
+    const margin = 72; // 1 inch
+    const pageW = 595; const pageH = 842; // A4
+    const lineH = 16; const fontSize = 11;
+    const maxW = pageW - margin * 2;
+
+    // Rough word-wrap: split text into lines that fit ~80 chars
+    const wrapLine = (line) => {
+      const words = line.split(" ");
+      const lines = []; let cur = "";
+      for (const w of words) {
+        if ((cur + " " + w).length > 80 && cur) { lines.push(cur); cur = w; }
+        else { cur = cur ? cur + " " + w : w; }
+      }
+      if (cur) lines.push(cur);
+      return lines.length ? lines : [""];
+    };
+
+    const paragraphs = text.split("\n");
+    const allLines = [];
+    for (const p of paragraphs) {
+      if (p.trim() === "") { allLines.push(""); continue; }
+      allLines.push(...wrapLine(p));
+    }
+
+    // Build PDF content
+    const textLines = allLines.map((l, i) => {
+      const y = pageH - margin - i * lineH;
+      const escaped = l.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+      return `BT /F1 ${fontSize} Tf ${margin} ${y} Td (${escaped}) Tj ET`;
+    }).join("\n");
+
+    const stream = `q\n${textLines}\nQ`;
+    const pdf = `%PDF-1.4
+1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj
+2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj
+3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 ${pageW} ${pageH}]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj
+4 0 obj<</Length ${stream.length}>>
+stream
+${stream}
+endstream
+endobj
+5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj
+xref
+0 6
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000115 00000 n
+0000000300 00000 n
+0000000${(400 + stream.length).toString().padStart(3, "0")} 00000 n
+trailer<</Size 6/Root 1 0 R>>
+startxref
+${450 + stream.length}
+%%EOF`;
+
+    return new Blob([pdf], { type: "application/pdf" });
+  };
+
+  const handleGenerateCoverLetter = async () => {
+    if (!selectedJob) return;
+    setCoverLetter({ text: "", pdfUrl: null, loading: true });
+    try {
+      const res = await api.post(`/api/jobs/${selectedJob.id}/generate-cover-letter`);
+      const text = res.data.cover_letter;
+      const blob = buildCoverLetterPdf(text, res.data.candidate_name, res.data.job_title);
+      const pdfUrl = URL.createObjectURL(blob);
+      setCoverLetter({ text, pdfUrl, loading: false, candidateName: res.data.candidate_name });
+    } catch {
+      setCoverLetter(null);
+      setError("Failed to generate cover letter");
+    }
+  };
+
+  const downloadCoverLetter = () => {
+    if (!coverLetter?.pdfUrl) return;
+    const a = document.createElement("a");
+    a.href = coverLetter.pdfUrl;
+    a.download = `Cover_Letter_${selectedJob?.title?.replace(/\s+/g, "_") || "job"}.pdf`;
+    a.click();
+  };
 
   const handleApply = async (e) => {
     e.preventDefault();
@@ -120,6 +205,75 @@ function CandidateJobs() {
 
   return (
     <>
+    {/* ── Cover Letter preview modal ── */}
+    {clPreview && coverLetter?.text && (
+      <div
+        style={{
+          position: "fixed", inset: 0, zIndex: 10000,
+          background: "rgba(0,0,0,.45)", display: "flex",
+          alignItems: "center", justifyContent: "center",
+        }}
+        onClick={() => setClPreview(false)}
+      >
+        <div
+          style={{
+            background: "#fff", borderRadius: 14, width: "94%", maxWidth: 860,
+            height: "90vh", display: "flex", flexDirection: "column",
+            boxShadow: "0 24px 64px rgba(0,0,0,.25)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Top bar */}
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            padding: "16px 22px", borderBottom: "1px solid #e5e7eb", flexShrink: 0,
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 15, fontWeight: 600, color: "#111827" }}>
+              <i className="fa-solid fa-file-lines" style={{ color: "#7c3aed", fontSize: 18 }} />
+              Cover Letter
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <button
+                onClick={downloadCoverLetter}
+                style={{
+                  background: "#7c3aed", border: "none", color: "#fff",
+                  padding: "8px 18px", borderRadius: 20, cursor: "pointer", fontSize: 13,
+                  fontWeight: 600, display: "flex", alignItems: "center", gap: 7,
+                }}
+              >
+                Download <i className="fa-solid fa-download" style={{ fontSize: 12 }} />
+              </button>
+              <button
+                onClick={() => setClPreview(false)}
+                style={{
+                  background: "none", border: "none", color: "#9ca3af",
+                  fontSize: 26, cursor: "pointer", padding: 0, lineHeight: 1,
+                  fontWeight: 700,
+                }}
+              >
+                &times;
+              </button>
+            </div>
+          </div>
+
+          {/* Letter content */}
+          <div style={{
+            flex: 1, overflowY: "auto", padding: "36px 48px",
+          }}>
+            {coverLetter.text.split("\n").map((line, i) => (
+              <p key={i} style={{
+                margin: line.trim() === "" ? "16px 0" : "4px 0",
+                fontSize: 15, lineHeight: 1.7, color: "#1f2937",
+                fontWeight: (line.startsWith("Dear ") || line.startsWith("Sincerely")) ? 600 : 400,
+              }}>
+                {line || "\u00A0"}
+              </p>
+            ))}
+          </div>
+        </div>
+      </div>
+    )}
+
     <LandingHeader />
     <div className="jobs-page candidate-jobs">
 
@@ -398,6 +552,56 @@ function CandidateJobs() {
                             </div>
                           </div>
                         )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Cover Letter ── */}
+                {app && app.similarity_score != null && (
+                  <div className="detail-card" style={{ marginBottom: 0 }}>
+                    {!coverLetter ? (
+                      <button
+                        className="btn-outline"
+                        style={{ width: "100%", justifyContent: "center", gap: 8 }}
+                        onClick={handleGenerateCoverLetter}
+                      >
+                        <i className="fa-solid fa-file-pen" /> Generate Cover Letter
+                      </button>
+                    ) : coverLetter.loading ? (
+                      <div style={{ textAlign: "center", padding: "20px 0", color: "var(--muted)", fontSize: 13 }}>
+                        <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 8 }} />
+                        Generating cover letter...
+                      </div>
+                    ) : (
+                      <div>
+                        {/* File card */}
+                        <div
+                          style={{
+                            display: "flex", alignItems: "center", gap: 12,
+                            padding: "12px 14px", borderRadius: 8,
+                            border: "1px solid var(--border)", cursor: "pointer",
+                            background: "var(--bg-2, #f9fafb)",
+                          }}
+                          onClick={() => setClPreview(true)}
+                        >
+                          <i className="fa-solid fa-file-pdf" style={{ fontSize: 28, color: "#e74c3c" }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
+                              Cover_Letter_{selectedJob?.title?.replace(/\s+/g, "_") || "job"}.pdf
+                            </div>
+                            <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
+                              Click to preview
+                            </div>
+                          </div>
+                          <button
+                            className="btn-outline"
+                            style={{ fontSize: 11, padding: "5px 10px" }}
+                            onClick={(e) => { e.stopPropagation(); downloadCoverLetter(); }}
+                          >
+                            <i className="fa-solid fa-download" /> Download
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>

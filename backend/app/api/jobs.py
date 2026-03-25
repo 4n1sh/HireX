@@ -13,8 +13,9 @@ from app.api.auth import get_current_user
 from app.db.database import get_db, SessionLocal          # <-- import SessionLocal
 from app.models.application import Application
 from app.models.job import JobPosting
+from app.models.user import User
 from app.schemas.jobs import ApplicationOut, JobCreate, JobOut, JobUpdate
-from app.services.resume_scorer import score_resume_against_job
+from app.services.resume_scorer import score_resume_against_job, generate_cover_letter
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 
@@ -310,6 +311,50 @@ def list_applications(
         .order_by(Application.applied_at.desc())
         .all()
     )
+
+
+# ─────────────────────────────────────────
+# CANDIDATE — GENERATE COVER LETTER
+# ─────────────────────────────────────────
+
+@router.post("/{job_id}/generate-cover-letter")
+def gen_cover_letter(
+    job_id: UUID,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user["role"] != "candidate":
+        raise HTTPException(status_code=403, detail="Only candidates can generate cover letters")
+
+    # Find the candidate's application for this job
+    app = db.query(Application).filter(
+        Application.job_id == job_id,
+        Application.candidate_id == user["id"],
+    ).first()
+    if not app:
+        raise HTTPException(status_code=404, detail="You haven't applied to this job yet")
+
+    extracted = app.extracted_data or {}
+    resume_sections = extracted.get("sections", {})
+    if not resume_sections:
+        raise HTTPException(status_code=400, detail="Resume not yet processed — try again shortly")
+
+    job = db.query(JobPosting).filter(JobPosting.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    job_sections = job.extracted_requirements or {}
+    if not job_sections:
+        raise HTTPException(status_code=400, detail="Job data not yet processed")
+
+    candidate = db.query(User).filter(User.id == user["id"]).first()
+    candidate_name = candidate.full_name or candidate.email.split("@")[0] if candidate else "Applicant"
+
+    letter = generate_cover_letter(resume_sections, job_sections, job.title, candidate_name)
+    if not letter:
+        raise HTTPException(status_code=500, detail="Failed to generate cover letter")
+
+    return {"cover_letter": letter, "candidate_name": candidate_name, "job_title": job.title}
 
 
 # ─────────────────────────────────────────

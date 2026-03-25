@@ -35,6 +35,8 @@ function HRJobs() {
   const [updatingStatus, setUpdatingStatus] = useState(null); // app id being updated
   const [skillGapOpen, setSkillGapOpen] = useState({}); // app id -> bool
   const [statusToast, setStatusToast] = useState(null); // { message, type }
+  const [questionsModal, setQuestionsModal] = useState(null); // { appId, questions, loading }
+
 
   // Edit
   const [editingId, setEditingId] = useState(null);
@@ -152,6 +154,24 @@ function HRJobs() {
   const toggleSkillGap = (appId) =>
     setSkillGapOpen((prev) => ({ ...prev, [appId]: !prev[appId] }));
 
+  const handleGenerateQuestions = async (appId) => {
+    setQuestionsModal({ appId, questions: [], loading: true });
+    try {
+      const res = await api.post(`/api/hr/applications/${appId}/interview-questions`);
+      setQuestionsModal({ appId, questions: res.data.questions, loading: false });
+    } catch {
+      showToast("Failed to generate questions", "error");
+      setQuestionsModal(null);
+    }
+  };
+
+  const copyAllQuestions = () => {
+    if (!questionsModal?.questions?.length) return;
+    const text = questionsModal.questions.map((q, i) => `${i + 1}. ${q}`).join("\n");
+    navigator.clipboard.writeText(text);
+    showToast("Questions copied to clipboard");
+  };
+
   const toggleExpand = async (job) => {
     if (expandedId === job.id) {
       setExpandedId(null);
@@ -196,6 +216,59 @@ function HRJobs() {
         }}>
           <i className={`fas ${statusToast.type === "error" ? "fa-circle-xmark" : "fa-circle-check"}`} />
           {statusToast.message}
+        </div>
+      )}
+
+      {/* Interview questions modal */}
+      {questionsModal && !questionsModal.loading && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 10000,
+          background: "rgba(0,0,0,.45)", display: "flex", alignItems: "center", justifyContent: "center",
+        }} onClick={() => setQuestionsModal(null)}>
+          <div style={{
+            background: "var(--card-bg, #fff)", borderRadius: 14,
+            maxWidth: 860, width: "94%", height: "90vh",
+            display: "flex", flexDirection: "column",
+            boxShadow: "0 24px 64px rgba(0,0,0,.25)",
+          }} onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              padding: "16px 22px", borderBottom: "1px solid #e5e7eb", flexShrink: 0,
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 15, fontWeight: 600, color: "var(--ink, #111827)" }}>
+                <i className="fa-solid fa-clipboard-question" style={{ color: "var(--primary, #7c3aed)", fontSize: 18 }} />
+                Interview Questions
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <button
+                  onClick={copyAllQuestions}
+                  style={{
+                    background: "#7c3aed", border: "none", color: "#fff",
+                    padding: "8px 18px", borderRadius: 20, cursor: "pointer", fontSize: 13,
+                    fontWeight: 600, display: "flex", alignItems: "center", gap: 7,
+                  }}
+                >
+                  Copy All <i className="fa-solid fa-copy" style={{ fontSize: 12 }} />
+                </button>
+                <button
+                  onClick={() => setQuestionsModal(null)}
+                  style={{
+                    background: "none", border: "none", color: "#9ca3af",
+                    fontSize: 26, cursor: "pointer", padding: 0, lineHeight: 1, fontWeight: 700,
+                  }}
+                >&times;</button>
+              </div>
+            </div>
+            {/* Questions list */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "36px 48px" }}>
+              <ol style={{ margin: 0, paddingLeft: 24, display: "flex", flexDirection: "column", gap: 18 }}>
+                {questionsModal.questions.map((q, i) => (
+                  <li key={i} style={{ fontSize: 15, lineHeight: 1.7, color: "var(--ink-2, #1f2937)" }}>{q}</li>
+                ))}
+              </ol>
+            </div>
+          </div>
         </div>
       )}
 
@@ -573,6 +646,17 @@ function HRJobs() {
                                   Skills
                                 </button>
                               )}
+                              <button
+                                className="hr-gap-btn"
+                                onClick={() => handleGenerateQuestions(app.id)}
+                                title="Generate interview questions"
+                                disabled={questionsModal?.loading && questionsModal?.appId === app.id}
+                              >
+                                {questionsModal?.loading && questionsModal?.appId === app.id
+                                  ? <><i className="fa-solid fa-spinner fa-spin" /> Generating...</>
+                                  : <><i className="fa-solid fa-clipboard-question" /> Questions</>
+                                }
+                              </button>
                               <select
                                 className="app-status-select"
                                 value={app.status}

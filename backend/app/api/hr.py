@@ -13,6 +13,7 @@ from app.models.application import Application
 from app.models.job import JobPosting
 from app.models.user import User
 from app.services.email_service import send_status_email
+from app.services.resume_scorer import generate_interview_questions
 
 
 class StatusUpdate(BaseModel):
@@ -145,3 +146,44 @@ def update_application_status(
         )
 
     return {"id": str(app.id), "status": app.status}
+
+
+@router.post("/applications/{application_id}/interview-questions")
+def get_interview_questions(
+    application_id: UUID,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    _require_hr(user)
+
+    app = db.query(Application).filter(Application.id == application_id).first()
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    job = db.query(JobPosting).filter(JobPosting.id == app.job_id).first()
+    if not job or job.created_by != user["id"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # Return cached questions if already generated
+    extracted = app.extracted_data or {}
+    if extracted.get("interview_questions"):
+        return {"questions": extracted["interview_questions"], "cached": True}
+
+    resume_sections = extracted.get("sections", {})
+    job_sections = job.extracted_requirements or {}
+
+    if not resume_sections or not job_sections:
+        raise HTTPException(status_code=400, detail="Resume or job data not yet processed")
+
+    questions = generate_interview_questions(resume_sections, job_sections)
+    if not questions:
+        raise HTTPException(status_code=500, detail="Failed to generate questions")
+
+    # Cache in extracted_data
+    extracted["interview_questions"] = questions
+    app.extracted_data = extracted
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(app, "extracted_data")
+    db.commit()
+
+    return {"questions": questions, "cached": False}
