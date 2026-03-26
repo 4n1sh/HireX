@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import api from "../../api/axios";
 import "../Jobs.css";
-import LandingHeader from "../../components/LandingHeader";
 
 function CandidateJobs() {
   const [jobs, setJobs] = useState([]);
@@ -18,6 +17,7 @@ function CandidateJobs() {
   const [gapOpen, setGapOpen] = useState(false);
   const [coverLetter, setCoverLetter] = useState(null); // { text, pdfUrl, loading }
   const [clPreview, setClPreview] = useState(false);
+  const [aiToolsOpen, setAiToolsOpen] = useState(false);
   const fileRef = useRef(null);
 
   const fetchJobs = async () => {
@@ -61,7 +61,7 @@ function CandidateJobs() {
   }, [applications]);
 
   // Reset gap open + cover letter when job changes
-  useEffect(() => { setGapOpen(false); setCoverLetter(null); setClPreview(false); }, [selectedJob]);
+  useEffect(() => { setGapOpen(false); setCoverLetter(null); setClPreview(false); setAiToolsOpen(false); }, [selectedJob]);
 
   const buildCoverLetterPdf = (text, candidateName, jobTitle) => {
     // Minimal PDF builder — no external deps
@@ -204,7 +204,7 @@ ${450 + stream.length}
   const gap = app?.extracted_data?.skill_gap;
 
   return (
-    <>
+    <div className="jobs-page candidate-jobs" style={{ height: "100%", minHeight: 0 }}>
     {/* ── Cover Letter preview modal ── */}
     {clPreview && coverLetter?.text && (
       <div
@@ -273,9 +273,6 @@ ${450 + stream.length}
         </div>
       </div>
     )}
-
-    <LandingHeader />
-    <div className="jobs-page candidate-jobs">
 
       {/* ── Top Bar ── */}
       <div className="jobs-topbar">
@@ -509,99 +506,116 @@ ${450 + stream.length}
                   </div>
                 )}
 
-                {/* ── Skill Gap ── */}
-                {gap && (
+                {/* ── AI Tools (collapsible) ── */}
+                {app && app.similarity_score != null && (
                   <div className="skill-gap-section">
                     <button
                       className="skill-gap-toggle"
-                      onClick={() => setGapOpen((v) => !v)}
+                      onClick={() => setAiToolsOpen((v) => !v)}
                     >
-                      <i className="fa-solid fa-magnifying-glass-chart" />
-                      Skill Gap Analysis
-                      <i className={`fa-solid fa-chevron-${gapOpen ? "up" : "down"} sgap-chevron`} />
+                      <i className="fa-solid fa-wand-magic-sparkles" />
+                      AI Tools
+                      <i className={`fa-solid fa-chevron-${aiToolsOpen ? "up" : "down"} sgap-chevron`} />
                     </button>
-                    {gapOpen && (
-                      <div className="skill-gap-body">
-                        {gap.matched?.length > 0 && (
-                          <div className="skill-gap-row">
-                            <span className="skill-gap-label matched">Matched</span>
-                            <div className="skill-tags">
-                              {gap.matched.map((s) => (
-                                <span key={s} className="skill-tag matched">{s}</span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {gap.partial?.length > 0 && (
-                          <div className="skill-gap-row">
-                            <span className="skill-gap-label partial">Partial</span>
-                            <div className="skill-tags">
-                              {gap.partial.map((s) => (
-                                <span key={s} className="skill-tag partial">{s}</span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {gap.missing?.length > 0 && (
-                          <div className="skill-gap-row">
-                            <span className="skill-gap-label missing">Missing</span>
-                            <div className="skill-tags">
-                              {gap.missing.map((s) => (
-                                <span key={s} className="skill-tag missing">{s}</span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                    {aiToolsOpen && (
+                      <div style={{ padding: "12px 0", display: "flex", flexDirection: "column", gap: 12 }}>
 
-                {/* ── Cover Letter ── */}
-                {app && app.similarity_score != null && (
-                  <div className="detail-card" style={{ marginBottom: 0 }}>
-                    {!coverLetter ? (
-                      <button
-                        className="btn-outline"
-                        style={{ width: "100%", justifyContent: "center", gap: 8 }}
-                        onClick={handleGenerateCoverLetter}
-                      >
-                        <i className="fa-solid fa-file-pen" /> Generate Cover Letter
-                      </button>
-                    ) : coverLetter.loading ? (
-                      <div style={{ textAlign: "center", padding: "20px 0", color: "var(--muted)", fontSize: 13 }}>
-                        <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 8 }} />
-                        Generating cover letter...
-                      </div>
-                    ) : (
-                      <div>
-                        {/* File card */}
-                        <div
-                          style={{
-                            display: "flex", alignItems: "center", gap: 12,
-                            padding: "12px 14px", borderRadius: 8,
-                            border: "1px solid var(--border)", cursor: "pointer",
-                            background: "var(--bg-2, #f9fafb)",
-                          }}
-                          onClick={() => setClPreview(true)}
-                        >
-                          <i className="fa-solid fa-file-pdf" style={{ fontSize: 28, color: "#e74c3c" }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
-                              Cover_Letter_{selectedJob?.title?.replace(/\s+/g, "_") || "job"}.pdf
-                            </div>
-                            <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
-                              Click to preview
-                            </div>
+                        {/* Skill Gap */}
+                        {gap && (
+                          <div style={{ border: "1px solid var(--border)", borderRadius: "var(--r)", padding: 14 }}>
+                            <button
+                              style={{
+                                background: "none", border: "none", cursor: "pointer", width: "100%",
+                                display: "flex", alignItems: "center", gap: 8, padding: 0,
+                                fontSize: 13, fontWeight: 600, color: "var(--ink)",
+                              }}
+                              onClick={() => setGapOpen((v) => !v)}
+                            >
+                              <i className="fa-solid fa-magnifying-glass-chart" style={{ color: "var(--brand)" }} />
+                              Skill Gap Analysis
+                              <i className={`fa-solid fa-chevron-${gapOpen ? "up" : "down"}`} style={{ marginLeft: "auto", fontSize: 11, color: "var(--muted)" }} />
+                            </button>
+                            {gapOpen && (
+                              <div className="skill-gap-body" style={{ marginTop: 10 }}>
+                                {gap.matched?.length > 0 && (
+                                  <div className="skill-gap-row">
+                                    <span className="skill-gap-label matched">Matched</span>
+                                    <div className="skill-tags">
+                                      {gap.matched.map((s) => (
+                                        <span key={s} className="skill-tag matched">{s}</span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {gap.partial?.length > 0 && (
+                                  <div className="skill-gap-row">
+                                    <span className="skill-gap-label partial">Partial</span>
+                                    <div className="skill-tags">
+                                      {gap.partial.map((s) => (
+                                        <span key={s} className="skill-tag partial">{s}</span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {gap.missing?.length > 0 && (
+                                  <div className="skill-gap-row">
+                                    <span className="skill-gap-label missing">Missing</span>
+                                    <div className="skill-tags">
+                                      {gap.missing.map((s) => (
+                                        <span key={s} className="skill-tag missing">{s}</span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
-                          <button
-                            className="btn-outline"
-                            style={{ fontSize: 11, padding: "5px 10px" }}
-                            onClick={(e) => { e.stopPropagation(); downloadCoverLetter(); }}
-                          >
-                            <i className="fa-solid fa-download" /> Download
-                          </button>
+                        )}
+
+                        {/* Cover Letter */}
+                        <div style={{ border: "1px solid var(--border)", borderRadius: "var(--r)", padding: 14 }}>
+                          {!coverLetter ? (
+                            <button
+                              className="btn-outline"
+                              style={{ width: "100%", justifyContent: "center", gap: 8 }}
+                              onClick={handleGenerateCoverLetter}
+                            >
+                              <i className="fa-solid fa-file-pen" /> Generate Cover Letter
+                            </button>
+                          ) : coverLetter.loading ? (
+                            <div style={{ textAlign: "center", padding: "12px 0", color: "var(--muted)", fontSize: 13 }}>
+                              <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 8 }} />
+                              Generating cover letter...
+                            </div>
+                          ) : (
+                            <div
+                              style={{
+                                display: "flex", alignItems: "center", gap: 12,
+                                padding: "10px 12px", borderRadius: 8,
+                                background: "var(--bg-2, #f9fafb)", cursor: "pointer",
+                              }}
+                              onClick={() => setClPreview(true)}
+                            >
+                              <i className="fa-solid fa-file-pdf" style={{ fontSize: 28, color: "#e74c3c" }} />
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
+                                  Cover_Letter_{selectedJob?.title?.replace(/\s+/g, "_") || "job"}.pdf
+                                </div>
+                                <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 2 }}>
+                                  Click to preview
+                                </div>
+                              </div>
+                              <button
+                                className="btn-outline"
+                                style={{ fontSize: 11, padding: "5px 10px" }}
+                                onClick={(e) => { e.stopPropagation(); downloadCoverLetter(); }}
+                              >
+                                <i className="fa-solid fa-download" /> Download
+                              </button>
+                            </div>
+                          )}
                         </div>
+
                       </div>
                     )}
                   </div>
@@ -661,7 +675,6 @@ ${450 + stream.length}
         </>
       )}
     </div>
-    </>
   );
 }
 

@@ -1,8 +1,10 @@
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import HRJobs from "./pages/hr/HRJobs";
 import HRDashboard from "./pages/hr/HRDashboard";
+import HRApplicants from "./pages/hr/HRApplicants";
+import CandidateDashboard from "./pages/candidate/CandidateDashboard";
 import CandidateJobs from "./pages/candidate/CandidateJobs";
 import MyApplications from "./pages/candidate/MyApplications";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -37,36 +39,34 @@ function App() {
           }
         />
 
-        {/* Candidate — jobs is standalone (no sidebar), applications uses sidebar */}
+        {/* Candidate — all pages use sidebar layout */}
         <Route
           path="/candidate"
           element={
             <ProtectedRoute allowedRole="candidate">
-              <Outlet />
+              <CandidateLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<Navigate to="jobs" replace />} />
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<CandidateDashboard />} />
           <Route path="jobs" element={<CandidateJobs />} />
-          <Route element={<CandidateLayout />}>
-            <Route path="applications" element={<MyApplications />} />
-          </Route>
+          <Route path="applications" element={<MyApplications />} />
         </Route>
 
-        {/* HR — sidebar layout, like admin */}
+        {/* HR — sidebar layout */}
         <Route
           path="/hr"
           element={
             <ProtectedRoute allowedRole="hr">
-              <Outlet />
+              <HRLayout />
             </ProtectedRoute>
           }
         >
-          <Route element={<HRLayout />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<HRDashboard />} />
-            <Route path="jobs" element={<HRJobs />} />
-          </Route>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<HRDashboard />} />
+          <Route path="jobs" element={<HRJobs />} />
+          <Route path="jobs/:jobId/applicants" element={<HRApplicants />} />
         </Route>
 
         {/* Admin — sidebar layout */}
@@ -74,15 +74,13 @@ function App() {
           path="/admin"
           element={
             <ProtectedRoute allowedRole="admin">
-              <Outlet />
+              <AdminLayout />
             </ProtectedRoute>
           }
         >
-          <Route element={<AdminLayout />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="users" element={<AdminUsers />} />
-          </Route>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -19,6 +19,7 @@ function CandidateLayout() {
   };
 
   const navItems = [
+    { to: "/candidate/dashboard", icon: "fa-house", label: "Dashboard" },
     { to: "/candidate/jobs", icon: "fa-magnifying-glass", label: "Browse Jobs" },
     { to: "/candidate/applications", icon: "fa-file-lines", label: "My Applications" },
   ];
