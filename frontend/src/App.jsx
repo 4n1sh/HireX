@@ -15,6 +15,7 @@ import AdminLayout from "./layouts/AdminLayout";
 import HRLayout from "./layouts/HRLayout";
 import CandidateLayout from "./layouts/CandidateLayout";
 import PublicRoute from "./components/PublicRoute";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
           <Route path="dashboard" element={<CandidateDashboard />} />
           <Route path="jobs" element={<CandidateJobs />} />
           <Route path="applications" element={<MyApplications />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* HR — sidebar layout */}
@@ -67,6 +69,7 @@ function App() {
           <Route path="dashboard" element={<HRDashboard />} />
           <Route path="jobs" element={<HRJobs />} />
           <Route path="jobs/:jobId/applicants" element={<HRApplicants />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
 
         {/* Admin — sidebar layout */}
@@ -81,6 +84,7 @@ function App() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
       </Routes>
     </BrowserRouter>

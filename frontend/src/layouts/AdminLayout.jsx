@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, Link } from "react-router-dom";
 import "../pages/Jobs.css";
 
 function AdminLayout() {
@@ -25,19 +25,14 @@ function AdminLayout() {
 
   return (
     <div className="admin-shell">
-      {/* ── Sidebar ── */}
       <aside className="admin-sidebar">
-        <div className="admin-sidebar-logo">
-          <img
-            src="/logo.jpg"
-            alt="HireX logo"
-            className="admin-sidebar-logo-image"
-          />
+        <Link to="/" className="admin-sidebar-logo" style={{ textDecoration: "none" }}>
+          <img src="/logo.jpg" alt="HireX logo" className="admin-sidebar-logo-image" />
           <div>
             <div className="admin-sidebar-logo-text">HireX</div>
             <div className="admin-sidebar-logo-badge">Admin</div>
           </div>
-        </div>
+        </Link>
 
         <nav className="admin-sidebar-nav">
           <div className="admin-nav-section">Main</div>
@@ -51,27 +46,32 @@ function AdminLayout() {
               {label}
             </NavLink>
           ))}
+          <div className="admin-nav-section" style={{ marginTop: 12 }}>Account</div>
+          <NavLink
+            to="/admin/profile"
+            className={({ isActive }) => `admin-nav-link${isActive ? " active" : ""}`}
+          >
+            <i className="fa-solid fa-user-circle" />
+            Profile
+          </NavLink>
         </nav>
 
         <div className="admin-sidebar-user">
-          <div className="admin-sidebar-user-avatar">
-            {initials(user.full_name, user.email)}
-          </div>
-          <div className="admin-sidebar-user-info">
-            <strong>{user.full_name || user.email}</strong>
-            <span>Administrator</span>
-          </div>
-          <button
-            className="admin-logout-btn"
-            onClick={handleLogout}
-            title="Log out"
-          >
+          <Link to="/admin/profile" style={{ textDecoration: "none", display: "contents" }}>
+            <div className="admin-sidebar-user-avatar" title="View profile" style={{ cursor: "pointer" }}>
+              {initials(user.full_name, user.email)}
+            </div>
+            <div className="admin-sidebar-user-info" style={{ cursor: "pointer" }}>
+              <strong>{user.full_name || user.email}</strong>
+              <span>Administrator</span>
+            </div>
+          </Link>
+          <button className="admin-logout-btn" onClick={handleLogout} title="Log out">
             <i className="fa-solid fa-arrow-right-from-bracket" />
           </button>
         </div>
       </aside>
 
-      {/* ── Main content ── */}
       <main className="admin-main-content">
         <Outlet />
       </main>

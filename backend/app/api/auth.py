@@ -2,6 +2,7 @@
 
 import os
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 from uuid import UUID
 
 from dotenv import load_dotenv
@@ -9,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 import bcrypt
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 load_dotenv()
@@ -115,3 +117,34 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
 @router.get("/me")
 def get_me(current_user: dict = Depends(get_current_user)):
     return {**current_user, "id": str(current_user["id"])}
+
+
+class UpdateProfileRequest(BaseModel):
+    full_name: Optional[str] = None
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None
+
+
+@router.put("/me")
+def update_me(
+    body: UpdateProfileRequest,
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    user = db.query(User).filter(User.id == current_user["id"]).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if body.full_name is not None:
+        user.full_name = body.full_name.strip() or user.full_name
+
+    if body.new_password:
+        if not body.current_password:
+            raise HTTPException(status_code=400, detail="Current password required")
+        if not bcrypt.checkpw(body.current_password.encode(), user.hashed_password.encode()):
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+        user.hashed_password = bcrypt.hashpw(body.new_password.encode(), bcrypt.gensalt()).decode()
+
+    db.commit()
+    db.refresh(user)
+    return {**_user_dict(user), "id": str(user.id)}

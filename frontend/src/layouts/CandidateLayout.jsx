@@ -28,11 +28,7 @@ function CandidateLayout() {
     <div className="admin-shell">
       <aside className="admin-sidebar">
         <Link to="/" className="admin-sidebar-logo" style={{ textDecoration: "none" }}>
-          <img
-            src="/logo.jpg"
-            alt="HireX logo"
-            className="admin-sidebar-logo-image"
-          />
+          <img src="/logo.jpg" alt="HireX logo" className="admin-sidebar-logo-image" />
           <div>
             <div className="admin-sidebar-logo-text">HireX</div>
             <div className="admin-sidebar-logo-badge candidate-badge">Candidate</div>
@@ -51,21 +47,27 @@ function CandidateLayout() {
               {label}
             </NavLink>
           ))}
+          <div className="admin-nav-section" style={{ marginTop: 12 }}>Account</div>
+          <NavLink
+            to="/candidate/profile"
+            className={({ isActive }) => `admin-nav-link${isActive ? " active" : ""}`}
+          >
+            <i className="fa-solid fa-user-circle" />
+            Profile
+          </NavLink>
         </nav>
 
         <div className="admin-sidebar-user">
-          <div className="admin-sidebar-user-avatar">
-            {initials(user.full_name, user.email)}
-          </div>
-          <div className="admin-sidebar-user-info">
-            <strong>{user.full_name || user.email}</strong>
-            <span>Candidate</span>
-          </div>
-          <button
-            className="admin-logout-btn"
-            onClick={handleLogout}
-            title="Log out"
-          >
+          <Link to="/candidate/profile" style={{ textDecoration: "none", display: "contents" }}>
+            <div className="admin-sidebar-user-avatar" title="View profile" style={{ cursor: "pointer" }}>
+              {initials(user.full_name, user.email)}
+            </div>
+            <div className="admin-sidebar-user-info" style={{ cursor: "pointer" }}>
+              <strong>{user.full_name || user.email}</strong>
+              <span>Candidate</span>
+            </div>
+          </Link>
+          <button className="admin-logout-btn" onClick={handleLogout} title="Log out">
             <i className="fa-solid fa-arrow-right-from-bracket" />
           </button>
         </div>
