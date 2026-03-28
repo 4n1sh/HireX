@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.api.auth import get_current_user
 from app.db.database import get_db, SessionLocal          # <-- import SessionLocal
 from app.models.application import Application
+from app.models.interview import Interview
 from app.models.job import JobPosting
 from app.models.user import User
 from app.schemas.jobs import ApplicationOut, JobCreate, JobOut, JobUpdate
@@ -95,8 +96,14 @@ def my_applications(
         .order_by(Application.applied_at.desc())
         .all()
     )
-    return [
-        {
+    result = []
+    for a in apps:
+        iv = (
+            db.query(Interview)
+            .filter(Interview.application_id == a.id, Interview.status != "cancelled")
+            .first()
+        )
+        result.append({
             "id": str(a.id),
             "job_id": str(a.job_id),
             "candidate_id": str(a.candidate_id),
@@ -106,13 +113,48 @@ def my_applications(
             "extracted_data": a.extracted_data,
             "hr_notes": a.hr_notes,
             "applied_at": a.applied_at.isoformat() if a.applied_at else None,
+            "updated_at": a.updated_at.isoformat() if a.updated_at else None,
             "job_title": a.job.title if a.job else None,
             "job_location": a.job.location if a.job else None,
             "job_type": a.job.job_type if a.job else None,
             "experience_level": a.job.experience_level if a.job else None,
-        }
-        for a in apps
-    ]
+            "interview": {
+                "id": str(iv.id),
+                "scheduled_at": iv.scheduled_at.isoformat(),
+                "duration_mins": iv.duration_mins,
+                "meeting_link": iv.meeting_link,
+                "notes": iv.notes,
+                "status": iv.status,
+            } if iv else None,
+        })
+    return result
+
+
+# ─────────────────────────────────────────
+# CANDIDATE — WITHDRAW APPLICATION
+# ─────────────────────────────────────────
+
+@router.delete("/me/applications/{application_id}", status_code=status.HTTP_204_NO_CONTENT)
+def withdraw_application(
+    application_id: UUID,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if user["role"] != "candidate":
+        raise HTTPException(status_code=403, detail="Only candidates can withdraw applications")
+
+    app = db.query(Application).filter(
+        Application.id == application_id,
+        Application.candidate_id == user["id"],
+    ).first()
+    if not app:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    if app.status != "pending":
+        raise HTTPException(status_code=400, detail="Can only withdraw pending applications")
+
+    db.delete(app)
+    db.commit()
 
 
 # ─────────────────────────────────────────
@@ -293,7 +335,7 @@ def apply_to_job(
 # HR — LIST APPLICATIONS FOR A JOB
 # ─────────────────────────────────────────
 
-@router.get("/{job_id}/applications", response_model=List[ApplicationOut])
+@router.get("/{job_id}/applications")
 def list_applications(
     job_id: UUID,
     user: dict = Depends(get_current_user),
@@ -305,12 +347,36 @@ def list_applications(
     if job.created_by != user["id"]:
         raise HTTPException(status_code=403, detail="Not your job posting")
 
-    return (
+    apps = (
         db.query(Application)
         .filter(Application.job_id == job_id)
         .order_by(Application.applied_at.desc())
         .all()
     )
+
+    result = []
+    for a in apps:
+        iv = (
+            db.query(Interview)
+            .filter(Interview.application_id == a.id, Interview.status != "cancelled")
+            .first()
+        )
+        d = ApplicationOut.model_validate(a).model_dump()
+        d["id"] = str(d["id"])
+        d["job_id"] = str(d["job_id"])
+        d["candidate_id"] = str(d["candidate_id"])
+        d["applied_at"] = a.applied_at.isoformat() if a.applied_at else None
+        d["updated_at"] = a.updated_at.isoformat() if a.updated_at else None
+        d["interview"] = {
+            "id": str(iv.id),
+            "scheduled_at": iv.scheduled_at.isoformat(),
+            "duration_mins": iv.duration_mins,
+            "meeting_link": iv.meeting_link,
+            "notes": iv.notes,
+            "status": iv.status,
+        } if iv else None
+        result.append(d)
+    return result
 
 
 # ─────────────────────────────────────────

@@ -1856,6 +1856,31 @@
 .app-status-select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
 .app-status-select:disabled { opacity: 0.5; cursor: default; }
 
+/* ─────────────────────────────────────────
+   HR INTERVIEW CARD
+───────────────────────────────────────── */
+.hr-interview-card {
+  margin: 0 0 0;
+  padding: 14px 16px;
+  border-top: 1px solid rgba(124, 58, 237, .15);
+  background: var(--purple-bg, #f5f3ff);
+  border-radius: 0 0 var(--r-lg, 14px) var(--r-lg, 14px);
+}
+
+/* ─────────────────────────────────────────
+   HR SCHEDULE BUTTON
+───────────────────────────────────────── */
+.hr-schedule-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px; border-radius: 7px; font-size: 12px; font-weight: 600;
+  border: 1.5px solid var(--purple, #7c3aed); color: var(--purple, #7c3aed);
+  background: var(--purple-bg, #f5f3ff); cursor: pointer; white-space: nowrap;
+  transition: background 150ms ease, color 150ms ease;
+}
+.hr-schedule-btn:hover {
+  background: var(--purple, #7c3aed); color: #fff;
+}
+
 .hr-skill-gap {
   padding: 10px 14px 12px;
   border-top: 1px solid var(--border);
@@ -1988,3 +2013,75 @@
   .myapps-grid { grid-template-columns: 1fr; }
   .myapps-topbar-right { width: 100%; }
 }
+
+/* ─────────────────────────────────────────
+   CLICKABLE CARD
+───────────────────────────────────────── */
+.myapp-card-clickable {
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+.myapp-card-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, .08);
+  border-color: var(--brand-mid);
+}
+
+/* ─────────────────────────────────────────
+   SKELETON LOADER
+───────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+  display: block;
+}
+
+/* ─────────────────────────────────────────
+   HR NOTES TEXTAREA
+───────────────────────────────────────── */
+.hr-notes-row {
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+.hr-notes-input {
+  flex: 1;
+  font-size: 13px;
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  resize: none;
+  font-family: inherit;
+  line-height: 1.5;
+  transition: border-color 150ms ease;
+  outline: none;
+}
+.hr-notes-input:focus { border-color: var(--brand); }
+.hr-notes-input::placeholder { color: var(--faint); }
+.hr-notes-save-btn {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 150ms ease;
+  flex-shrink: 0;
+}
+.hr-notes-save-btn:disabled { opacity: 0.6; cursor: not-allowed; }

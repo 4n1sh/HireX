@@ -72,10 +72,27 @@ function CandidateDashboard() {
       </div>
 
       {loading ? (
-        <p style={{ color: "var(--muted)", padding: "60px 0", textAlign: "center" }}>
-          <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: 8 }} />
-          Loading...
-        </p>
+        <>
+          <div className="admin-stats-grid">
+            {[1,2,3,4].map((i) => (
+              <div key={i} className="admin-stat-card-v2">
+                <div className="skeleton" style={{ width: 40, height: 40, borderRadius: 10 }} />
+                <div className="skeleton" style={{ height: 28, width: 50, margin: "8px auto 4px" }} />
+                <div className="skeleton" style={{ height: 12, width: 70, margin: "0 auto" }} />
+              </div>
+            ))}
+          </div>
+          <div className="admin-grid-2">
+            {[1,2].map((i) => (
+              <div key={i} className="admin-card">
+                <div className="skeleton" style={{ height: 14, width: "40%", marginBottom: 16 }} />
+                {[1,2,3].map((j) => (
+                  <div key={j} className="skeleton" style={{ height: 48, borderRadius: 10, marginBottom: 8 }} />
+                ))}
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
         <>
           <div className="admin-stats-grid">

@@ -56,6 +56,7 @@ class ApplicationOut(BaseModel):
     extracted_data: Optional[dict]
     hr_notes: Optional[str]
     applied_at: datetime
+    updated_at: Optional[datetime] = None
 
     def scoring(self) -> str:
         return "done" if self.similarity_score is not None else "in_progress"
