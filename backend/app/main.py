@@ -10,6 +10,10 @@ from app.api.auth import router as auth_router
 from app.api.jobs import router as jobs_router
 from app.api.admin import router as admin_router
 from app.api.hr import router as hr_router
+from app.db.database import Base, engine
+import app.models  # noqa: F401 — ensures all models are registered before create_all
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="HireX API")
 

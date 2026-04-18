@@ -16,7 +16,8 @@ from app.models.interview import Interview
 from app.models.job import JobPosting
 from app.models.user import User
 from app.schemas.jobs import ApplicationOut, JobCreate, JobOut, JobUpdate
-from app.services.resume_scorer import score_resume_against_job, generate_cover_letter
+from app.services.question_generator import generate_cover_letter
+from app.services.resume_scorer import score_resume_against_job
 
 router = APIRouter(prefix="/api/jobs", tags=["Jobs"])
 

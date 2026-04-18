@@ -23,6 +23,13 @@ const fmtInterview = (isoStr) => {
   );
 };
 
+const scoreColor = (s) => {
+  if (s == null) return "#9ca3af";
+  if (s >= 70) return "#16a34a";
+  if (s >= 45) return "#d97706";
+  return "#dc2626";
+};
+
 const EMPTY_FORM = { date: "", time: "", duration_mins: 60, meeting_link: "", notes: "" };
 
 function SkeletonApplicant() {
@@ -53,8 +60,8 @@ function HRApplicants() {
   const [questionsModal, setQuestionsModal] = useState(null);
   const [statusToast, setStatusToast] = useState(null);
   const [notes, setNotes] = useState({});
-  const [interviews, setInterviews] = useState({});        // { [appId]: interviewObj }
-  const [scheduleModal, setScheduleModal] = useState(null); // null | appId
+  const [interviews, setInterviews] = useState({});
+  const [scheduleModal, setScheduleModal] = useState(null);
   const [scheduleForm, setScheduleForm] = useState(EMPTY_FORM);
   const [schedulingId, setSchedulingId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
@@ -95,7 +102,7 @@ function HRApplicants() {
       setApplications((prev) =>
         prev.map((a) => (a.id === appId ? { ...a, status: newStatus } : a))
       );
-      showToast("Status updated — email sent to candidate");
+      showToast("Status updated");
     } catch {
       showToast("Failed to update status", "error");
     } finally {
@@ -294,54 +301,32 @@ function HRApplicants() {
                 cursor: "pointer", padding: 0, lineHeight: 1,
               }}>&times;</button>
             </div>
-
             <div style={{ padding: "24px", display: "flex", flexDirection: "column", gap: 16 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em", display: "block", marginBottom: 6 }}>
                     Date <span style={{ color: "var(--red, #ef4444)" }}>*</span>
                   </label>
-                  <input
-                    type="date"
-                    min={today}
-                    value={scheduleForm.date}
+                  <input type="date" min={today} value={scheduleForm.date}
                     onChange={(e) => setScheduleForm((p) => ({ ...p, date: e.target.value }))}
-                    style={{
-                      width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 14,
-                      border: "1.5px solid var(--border, #e5e7eb)", background: "var(--bg)",
-                      color: "var(--ink)", boxSizing: "border-box", outline: "none",
-                    }}
+                    style={{ width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 14, border: "1.5px solid var(--border, #e5e7eb)", background: "var(--bg)", color: "var(--ink)", boxSizing: "border-box", outline: "none" }}
                   />
                 </div>
                 <div>
                   <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em", display: "block", marginBottom: 6 }}>
                     Time <span style={{ color: "var(--red, #ef4444)" }}>*</span>
                   </label>
-                  <input
-                    type="time"
-                    value={scheduleForm.time}
+                  <input type="time" value={scheduleForm.time}
                     onChange={(e) => setScheduleForm((p) => ({ ...p, time: e.target.value }))}
-                    style={{
-                      width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 14,
-                      border: "1.5px solid var(--border, #e5e7eb)", background: "var(--bg)",
-                      color: "var(--ink)", boxSizing: "border-box", outline: "none",
-                    }}
+                    style={{ width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 14, border: "1.5px solid var(--border, #e5e7eb)", background: "var(--bg)", color: "var(--ink)", boxSizing: "border-box", outline: "none" }}
                   />
                 </div>
               </div>
-
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em", display: "block", marginBottom: 6 }}>
-                  Duration
-                </label>
-                <select
-                  value={scheduleForm.duration_mins}
+                <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em", display: "block", marginBottom: 6 }}>Duration</label>
+                <select value={scheduleForm.duration_mins}
                   onChange={(e) => setScheduleForm((p) => ({ ...p, duration_mins: Number(e.target.value) }))}
-                  style={{
-                    width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 14,
-                    border: "1.5px solid var(--border, #e5e7eb)", background: "var(--bg)",
-                    color: "var(--ink)", cursor: "pointer", outline: "none",
-                  }}
+                  style={{ width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 14, border: "1.5px solid var(--border, #e5e7eb)", background: "var(--bg)", color: "var(--ink)", cursor: "pointer", outline: "none" }}
                 >
                   <option value={30}>30 minutes</option>
                   <option value={45}>45 minutes</option>
@@ -349,64 +334,31 @@ function HRApplicants() {
                   <option value={90}>90 minutes</option>
                 </select>
               </div>
-
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em", display: "block", marginBottom: 6 }}>
-                  Meeting Link
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://meet.google.com/..."
-                  value={scheduleForm.meeting_link}
+                <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em", display: "block", marginBottom: 6 }}>Meeting Link</label>
+                <input type="url" placeholder="https://meet.google.com/..." value={scheduleForm.meeting_link}
                   onChange={(e) => setScheduleForm((p) => ({ ...p, meeting_link: e.target.value }))}
-                  style={{
-                    width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 14,
-                    border: "1.5px solid var(--border, #e5e7eb)", background: "var(--bg)",
-                    color: "var(--ink)", boxSizing: "border-box", outline: "none",
-                  }}
+                  style={{ width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 14, border: "1.5px solid var(--border, #e5e7eb)", background: "var(--bg)", color: "var(--ink)", boxSizing: "border-box", outline: "none" }}
                 />
               </div>
-
               <div>
                 <label style={{ fontSize: 12, fontWeight: 600, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em", display: "block", marginBottom: 6 }}>
-                  Prep Notes{" "}
-                  <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional — sent in email)</span>
+                  Prep Notes <span style={{ fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>(optional — sent in email)</span>
                 </label>
-                <textarea
-                  placeholder="Topics to cover, things to ask about their experience…"
-                  value={scheduleForm.notes}
+                <textarea placeholder="Topics to cover, things to ask…" value={scheduleForm.notes}
                   onChange={(e) => setScheduleForm((p) => ({ ...p, notes: e.target.value }))}
                   rows={3}
-                  style={{
-                    width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 14,
-                    border: "1.5px solid var(--border, #e5e7eb)", background: "var(--bg)",
-                    color: "var(--ink)", resize: "vertical", boxSizing: "border-box",
-                    fontFamily: "inherit", outline: "none",
-                  }}
+                  style={{ width: "100%", padding: "9px 12px", borderRadius: 8, fontSize: 14, border: "1.5px solid var(--border, #e5e7eb)", background: "var(--bg)", color: "var(--ink)", resize: "vertical", boxSizing: "border-box", fontFamily: "inherit", outline: "none" }}
                 />
               </div>
             </div>
-
-            <div style={{
-              padding: "16px 24px", borderTop: "1px solid var(--border, #e5e7eb)",
-              display: "flex", justifyContent: "flex-end", gap: 10,
-            }}>
-              <button onClick={() => setScheduleModal(null)} style={{
-                background: "var(--bg)", border: "1.5px solid var(--border)", color: "var(--ink-2)",
-                padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer",
-              }}>
+            <div style={{ padding: "16px 24px", borderTop: "1px solid var(--border, #e5e7eb)", display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button onClick={() => setScheduleModal(null)} style={{ background: "var(--bg)", border: "1.5px solid var(--border)", color: "var(--ink-2)", padding: "9px 20px", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Cancel
               </button>
-              <button
-                onClick={handleScheduleInterview}
+              <button onClick={handleScheduleInterview}
                 disabled={!scheduleForm.date || !scheduleForm.time || schedulingId === scheduleModal}
-                style={{
-                  background: "var(--purple, #7c3aed)", border: "none", color: "#fff",
-                  padding: "9px 22px", borderRadius: 8, fontSize: 13, fontWeight: 700,
-                  cursor: (!scheduleForm.date || !scheduleForm.time || schedulingId === scheduleModal) ? "not-allowed" : "pointer",
-                  opacity: (!scheduleForm.date || !scheduleForm.time || schedulingId === scheduleModal) ? 0.6 : 1,
-                  display: "flex", alignItems: "center", gap: 8,
-                }}
+                style={{ background: "var(--purple, #7c3aed)", border: "none", color: "#fff", padding: "9px 22px", borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: (!scheduleForm.date || !scheduleForm.time || schedulingId === scheduleModal) ? "not-allowed" : "pointer", opacity: (!scheduleForm.date || !scheduleForm.time || schedulingId === scheduleModal) ? 0.6 : 1, display: "flex", alignItems: "center", gap: 8 }}
               >
                 {schedulingId === scheduleModal
                   ? <><i className="fa-solid fa-spinner fa-spin" /> Scheduling…</>
@@ -420,10 +372,7 @@ function HRApplicants() {
       {/* Top bar */}
       <div className="admin-page-topbar">
         <div>
-          <Link
-            to="/hr/jobs"
-            style={{ fontSize: 13, color: "var(--muted)", textDecoration: "none", display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}
-          >
+          <Link to="/hr/jobs" style={{ fontSize: 13, color: "var(--muted)", textDecoration: "none", display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
             <i className="fa-solid fa-arrow-left" /> Back to Jobs
           </Link>
           <h1 className="admin-page-title">{job?.title || "Loading..."}</h1>
@@ -432,6 +381,7 @@ function HRApplicants() {
           </p>
         </div>
       </div>
+
 
       {loading ? (
         <>
@@ -478,7 +428,6 @@ function HRApplicants() {
             </div>
           </div>
 
-          {/* Applicant list */}
           {applications.length === 0 ? (
             <div className="admin-card" style={{ textAlign: "center", padding: "48px 24px" }}>
               <i className="fa-solid fa-users" style={{ fontSize: 28, color: "var(--faint)", marginBottom: 12, display: "block" }} />
@@ -496,9 +445,7 @@ function HRApplicants() {
                 return (
                   <div key={app.id} className="hr-applicant-card">
                     <div className="hr-applicant-row">
-                      <div className="hr-applicant-icon">
-                        <i className="fa-solid fa-user" />
-                      </div>
+                      <div className="hr-applicant-icon"><i className="fa-solid fa-user" /></div>
                       <div className="hr-applicant-info">
                         <strong>Candidate</strong>
                         <span>Applied {timeAgo(app.applied_at)}</span>
@@ -516,80 +463,52 @@ function HRApplicants() {
                       )}
 
                       {app.resume_path && (
-                        <a
-                          href={`${import.meta.env.VITE_API_URL || "http://localhost:8000"}${app.resume_path}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hr-cv-btn"
-                        >
+                        <a href={`${import.meta.env.VITE_API_URL || "http://localhost:8000"}${app.resume_path}`}
+                          target="_blank" rel="noopener noreferrer" className="hr-cv-btn">
                           <i className="fa-solid fa-file-arrow-down" /> CV
                         </a>
                       )}
 
                       {gap && (
-                        <button
-                          className="hr-gap-btn"
-                          onClick={() => toggleSkillGap(app.id)}
-                          title="View skill gap"
-                        >
-                          <i className={`fa-solid fa-chevron-${gapOpen ? "up" : "down"}`} />
-                          Skills
+                        <button className="hr-gap-btn" onClick={() => toggleSkillGap(app.id)} title="View skill gap">
+                          <i className={`fa-solid fa-chevron-${gapOpen ? "up" : "down"}`} /> Skills
                         </button>
                       )}
 
-                      <button
-                        className="hr-gap-btn"
-                        onClick={() => handleGenerateQuestions(app.id)}
-                        title="Generate interview questions"
-                        disabled={questionsModal?.loading && questionsModal?.appId === app.id}
-                      >
+                      <button className="hr-gap-btn" onClick={() => handleGenerateQuestions(app.id)}
+                        disabled={questionsModal?.loading && questionsModal?.appId === app.id}>
                         {questionsModal?.loading && questionsModal?.appId === app.id
                           ? <><i className="fa-solid fa-spinner fa-spin" /> Generating...</>
                           : <><i className="fa-solid fa-clipboard-question" /> Questions</>}
                       </button>
 
                       {!iv && (
-                        <button
-                          className="hr-schedule-btn"
-                          onClick={() => openScheduleModal(app.id)}
-                          title="Schedule an interview"
-                        >
+                        <button className="hr-schedule-btn" onClick={() => openScheduleModal(app.id)}>
                           <i className="fa-solid fa-calendar-plus" /> Schedule
                         </button>
                       )}
 
-                      <select
-                        className="app-status-select"
-                        value={app.status}
+                      <select className="app-status-select" value={app.status}
                         onChange={(e) => handleStatusChange(app.id, e.target.value)}
-                        disabled={updatingStatus === app.id}
-                      >
+                        disabled={updatingStatus === app.id}>
                         <option value="pending">Pending</option>
                         <option value="reviewed">Reviewed</option>
                         <option value="shortlisted">Shortlisted</option>
-                        {app.status === "interview" && (
-                          <option value="interview" disabled>Interview ✓</option>
-                        )}
+                        {app.status === "interview" && <option value="interview" disabled>Interview ✓</option>}
                         <option value="rejected">Rejected</option>
                         <option value="hired">Hired</option>
                       </select>
                     </div>
 
-                    {/* HR Notes */}
                     <div className="hr-notes-row">
-                      <textarea
-                        className="hr-notes-input"
-                        placeholder="Add notes about this candidate (visible to candidate after saving)…"
+                      <textarea className="hr-notes-input"
+                        placeholder="Add notes about this candidate…"
                         value={noteVal}
                         onChange={(e) => setNotes((prev) => ({ ...prev, [app.id]: e.target.value }))}
                         rows={2}
                       />
                       {noteChanged && (
-                        <button
-                          className="hr-notes-save-btn"
-                          onClick={() => handleSaveNotes(app)}
-                          disabled={savingNotes === app.id}
-                        >
+                        <button className="hr-notes-save-btn" onClick={() => handleSaveNotes(app)} disabled={savingNotes === app.id}>
                           {savingNotes === app.id
                             ? <><i className="fa-solid fa-spinner fa-spin" /> Saving…</>
                             : <><i className="fa-solid fa-floppy-disk" /> Save Notes</>}
@@ -597,48 +516,24 @@ function HRApplicants() {
                       )}
                     </div>
 
-                    {/* Scheduled interview card */}
                     {iv && (
                       <div className="hr-interview-card">
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                             <i className="fa-solid fa-calendar-check" style={{ color: "var(--purple, #7c3aed)", fontSize: 15 }} />
                             <strong style={{ fontSize: 13, color: "var(--ink)" }}>Interview Scheduled</strong>
-                            <span style={{
-                              background: "var(--purple, #7c3aed)", color: "#fff",
-                              fontSize: 10, fontWeight: 700, borderRadius: 20,
-                              padding: "2px 8px", letterSpacing: ".04em",
-                            }}>CONFIRMED</span>
+                            <span style={{ background: "var(--purple, #7c3aed)", color: "#fff", fontSize: 10, fontWeight: 700, borderRadius: 20, padding: "2px 8px", letterSpacing: ".04em" }}>CONFIRMED</span>
                           </div>
                           <div style={{ display: "flex", gap: 8 }}>
-                            <button
-                              onClick={() => openScheduleModal(app.id)}
-                              style={{
-                                background: "none", border: "1px solid var(--border)", color: "var(--ink-2)",
-                                padding: "5px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600,
-                                cursor: "pointer", display: "flex", alignItems: "center", gap: 5,
-                              }}
-                            >
+                            <button onClick={() => openScheduleModal(app.id)} style={{ background: "none", border: "1px solid var(--border)", color: "var(--ink-2)", padding: "5px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
                               <i className="fa-solid fa-pen" /> Reschedule
                             </button>
-                            <button
-                              onClick={() => handleCancelInterview(app.id)}
-                              disabled={cancellingId === app.id}
-                              style={{
-                                background: "none", border: "1px solid var(--red, #ef4444)", color: "var(--red, #ef4444)",
-                                padding: "5px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600,
-                                cursor: cancellingId === app.id ? "not-allowed" : "pointer",
-                                display: "flex", alignItems: "center", gap: 5,
-                                opacity: cancellingId === app.id ? 0.6 : 1,
-                              }}
-                            >
-                              {cancellingId === app.id
-                                ? <><i className="fa-solid fa-spinner fa-spin" /> Cancelling…</>
-                                : <><i className="fa-solid fa-xmark" /> Cancel</>}
+                            <button onClick={() => handleCancelInterview(app.id)} disabled={cancellingId === app.id}
+                              style={{ background: "none", border: "1px solid var(--red, #ef4444)", color: "var(--red, #ef4444)", padding: "5px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: cancellingId === app.id ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 5, opacity: cancellingId === app.id ? 0.6 : 1 }}>
+                              {cancellingId === app.id ? <><i className="fa-solid fa-spinner fa-spin" /> Cancelling…</> : <><i className="fa-solid fa-xmark" /> Cancel</>}
                             </button>
                           </div>
                         </div>
-
                         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
                           <div style={{ background: "rgba(255,255,255,.7)", borderRadius: 8, padding: "8px 12px" }}>
                             <div style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 3 }}>Date & Time</div>
@@ -651,23 +546,15 @@ function HRApplicants() {
                           {iv.meeting_link && (
                             <div style={{ background: "rgba(255,255,255,.7)", borderRadius: 8, padding: "8px 12px" }}>
                               <div style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 3 }}>Meeting</div>
-                              <a
-                                href={iv.meeting_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{ fontSize: 13, fontWeight: 600, color: "var(--purple, #7c3aed)", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}
-                              >
+                              <a href={iv.meeting_link} target="_blank" rel="noopener noreferrer"
+                                style={{ fontSize: 13, fontWeight: 600, color: "var(--purple, #7c3aed)", textDecoration: "none", display: "flex", alignItems: "center", gap: 4 }}>
                                 Join Link <i className="fa-solid fa-arrow-up-right-from-square" style={{ fontSize: 10 }} />
                               </a>
                             </div>
                           )}
                         </div>
-
                         {iv.notes && (
-                          <div style={{
-                            marginTop: 10, background: "rgba(255,255,255,.6)", borderRadius: 8,
-                            padding: "8px 12px", fontSize: 13, color: "var(--ink-2)", lineHeight: 1.5,
-                          }}>
+                          <div style={{ marginTop: 10, background: "rgba(255,255,255,.6)", borderRadius: 8, padding: "8px 12px", fontSize: 13, color: "var(--ink-2)", lineHeight: 1.5 }}>
                             <span style={{ fontSize: 10, fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: ".05em" }}>Notes · </span>
                             {iv.notes}
                           </div>
@@ -675,31 +562,24 @@ function HRApplicants() {
                       </div>
                     )}
 
-                    {/* Skill gap */}
                     {gap && gapOpen && (
                       <div className="hr-skill-gap">
                         {gap.matched?.length > 0 && (
                           <div className="skill-gap-row">
                             <span className="skill-gap-label matched">Matched</span>
-                            <div className="skill-tags">
-                              {gap.matched.map((s) => <span key={s} className="skill-tag matched">{s}</span>)}
-                            </div>
+                            <div className="skill-tags">{gap.matched.map((s) => <span key={s} className="skill-tag matched">{s}</span>)}</div>
                           </div>
                         )}
                         {gap.partial?.length > 0 && (
                           <div className="skill-gap-row">
                             <span className="skill-gap-label partial">Partial</span>
-                            <div className="skill-tags">
-                              {gap.partial.map((s) => <span key={s} className="skill-tag partial">{s}</span>)}
-                            </div>
+                            <div className="skill-tags">{gap.partial.map((s) => <span key={s} className="skill-tag partial">{s}</span>)}</div>
                           </div>
                         )}
                         {gap.missing?.length > 0 && (
                           <div className="skill-gap-row">
                             <span className="skill-gap-label missing">Missing</span>
-                            <div className="skill-tags">
-                              {gap.missing.map((s) => <span key={s} className="skill-tag missing">{s}</span>)}
-                            </div>
+                            <div className="skill-tags">{gap.missing.map((s) => <span key={s} className="skill-tag missing">{s}</span>)}</div>
                           </div>
                         )}
                       </div>
@@ -709,6 +589,7 @@ function HRApplicants() {
               })}
             </div>
           )}
+
         </>
       )}
     </div>

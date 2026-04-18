@@ -4,6 +4,7 @@ import Signup from "./pages/Signup";
 import HRJobs from "./pages/hr/HRJobs";
 import HRDashboard from "./pages/hr/HRDashboard";
 import HRApplicants from "./pages/hr/HRApplicants";
+import BulkScreen from "./pages/hr/BulkScreen";
 import CandidateDashboard from "./pages/candidate/CandidateDashboard";
 import CandidateJobs from "./pages/candidate/CandidateJobs";
 import MyApplications from "./pages/candidate/MyApplications";
@@ -69,6 +70,7 @@ function App() {
           <Route path="dashboard" element={<HRDashboard />} />
           <Route path="jobs" element={<HRJobs />} />
           <Route path="jobs/:jobId/applicants" element={<HRApplicants />} />
+          <Route path="bulk-screen" element={<BulkScreen />} />
           <Route path="profile" element={<Profile />} />
         </Route>
 

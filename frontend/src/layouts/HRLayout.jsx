@@ -21,6 +21,7 @@ function HRLayout() {
   const navItems = [
     { to: "/hr/dashboard", icon: "fa-house", label: "Dashboard" },
     { to: "/hr/jobs", icon: "fa-briefcase", label: "My Jobs" },
+    { to: "/hr/bulk-screen", icon: "fa-layer-group", label: "Bulk Screen" },
   ];
 
   return (
