@@ -8,11 +8,10 @@ HireX is a full-stack recruitment platform that uses local AI to score resumes, 
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 19, Vite, React Router, Axios |
-| Backend | Python, FastAPI, SQLAlchemy 2.0 |
+| Frontend | React 19, Vite |
+| Backend | FastAPI |
 | Database | PostgreSQL |
 | AI | Ollama (phi3 + nomic-embed-text) — runs locally |
-| Auth | JWT + bcrypt |
 
 ---
 
