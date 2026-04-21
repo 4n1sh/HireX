@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 from app.api.auth import get_current_user
 from app.db.database import get_db
 from app.models.application import Application
+from app.models.bulk_screening import BulkScreening
+from app.models.interview import Interview
 from app.models.job import JobPosting
 from app.models.user import User
 
@@ -182,10 +184,31 @@ def delete_user(
         raise HTTPException(status_code=404, detail="User not found")
 
     try:
+        # Remove dependent rows first so user deletion does not fail due to FK constraints.
+        candidate_app_ids = [
+            app_id
+            for (app_id,) in db.query(Application.id).filter(Application.candidate_id == user_id).all()
+        ]
+        if candidate_app_ids:
+            db.query(Interview).filter(Interview.application_id.in_(candidate_app_ids)).delete(
+                synchronize_session=False
+            )
+            db.query(Application).filter(Application.id.in_(candidate_app_ids)).delete(
+                synchronize_session=False
+            )
+
+        db.query(BulkScreening).filter(BulkScreening.hr_id == user_id).delete(
+            synchronize_session=False
+        )
+
+        hr_jobs = db.query(JobPosting).filter(JobPosting.created_by == user_id).all()
+        for job in hr_jobs:
+            db.delete(job)
+
         db.delete(target)
         db.commit()
     except Exception:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Cannot delete user: they may have associated records")
+        raise HTTPException(status_code=400, detail="Cannot delete user due to dependent records")
 
     return {"deleted": str(user_id)}

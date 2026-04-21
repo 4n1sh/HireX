@@ -1371,6 +1371,107 @@
   font-size: 14px; color: var(--muted); margin: 0;
 }
 
+.custom-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-left-width: 4px;
+  border-radius: var(--r);
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  box-shadow: var(--shadow-xs);
+}
+
+.custom-notice.success {
+  border-left-color: var(--green);
+  color: var(--green);
+}
+
+.custom-notice.error {
+  border-left-color: var(--red);
+  color: var(--red);
+}
+
+.custom-notice span {
+  color: var(--ink-2);
+  flex: 1;
+}
+
+.custom-notice button {
+  border: none;
+  background: transparent;
+  color: var(--faint);
+  cursor: pointer;
+  font-size: 14px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}
+
+.custom-notice button:hover {
+  color: var(--ink-2);
+  background: var(--bg);
+}
+
+.custom-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 16px;
+}
+
+.custom-modal {
+  width: min(460px, 100%);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-md);
+  padding: 18px 20px;
+}
+
+.custom-modal-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.custom-modal-icon.danger {
+  background: var(--red-bg);
+  color: var(--red);
+}
+
+.custom-modal h3 {
+  margin: 0 0 6px;
+  font-family: 'Sora', sans-serif;
+  font-size: 18px;
+  color: var(--ink);
+}
+
+.custom-modal p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.custom-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
 /* Stat cards */
 .admin-stats-grid {
   display: grid;

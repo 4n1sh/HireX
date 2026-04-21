@@ -8,6 +8,8 @@ function AdminUsers() {
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("");
   const [updating, setUpdating] = useState(null);
+  const [notice, setNotice] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -20,6 +22,13 @@ function AdminUsers() {
   };
 
   useEffect(() => { fetchUsers(); }, []);
+
+  const getErrorMessage = (err, fallback) => err?.response?.data?.detail || fallback;
+
+  const showNotice = (type, message) => {
+    setNotice({ type, message });
+    setTimeout(() => setNotice(null), 3500);
+  };
 
   const handleRoleChange = async (userId, newRole) => {
     setUpdating(userId + "_role");
@@ -42,12 +51,15 @@ function AdminUsers() {
   };
 
   const handleDelete = async (userId, displayName) => {
-    if (!window.confirm(`Delete "${displayName}"? This cannot be undone.`)) return;
     setUpdating(userId + "_del");
     try {
       await api.delete(`/api/admin/users/${userId}`);
       setUsers((prev) => prev.filter((u) => u.id !== userId));
-    } catch { /* silent */ }
+      showNotice("success", `Deleted ${displayName}.`);
+      setDeleteTarget(null);
+    } catch (err) {
+      showNotice("error", getErrorMessage(err, "Failed to delete user."));
+    }
     finally { setUpdating(null); }
   };
 
@@ -88,6 +100,16 @@ function AdminUsers() {
           </p>
         </div>
       </div>
+
+      {notice && (
+        <div className={`custom-notice ${notice.type}`} role="status" aria-live="polite">
+          <i className={`fa-solid ${notice.type === "success" ? "fa-circle-check" : "fa-circle-exclamation"}`} />
+          <span>{notice.message}</span>
+          <button onClick={() => setNotice(null)} aria-label="Close notification">
+            <i className="fa-solid fa-xmark" />
+          </button>
+        </div>
+      )}
 
       {/* Quick stats */}
       {!loading && (
@@ -195,7 +217,7 @@ function AdminUsers() {
                       </button>
                       <button
                         className="user-action-btn danger"
-                        onClick={() => handleDelete(u.id, u.full_name || u.email)}
+                        onClick={() => setDeleteTarget({ id: u.id, name: u.full_name || u.email })}
                         disabled={busy}
                         title="Delete user"
                       >
@@ -207,6 +229,33 @@ function AdminUsers() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div className="custom-modal-backdrop" role="presentation" onClick={() => updating ? null : setDeleteTarget(null)}>
+          <div className="custom-modal" role="dialog" aria-modal="true" aria-labelledby="delete-user-title" onClick={(e) => e.stopPropagation()}>
+            <div className="custom-modal-icon danger">
+              <i className="fa-solid fa-triangle-exclamation" />
+            </div>
+            <h3 id="delete-user-title">Delete user account?</h3>
+            <p>
+              This will permanently remove <strong>{deleteTarget.name}</strong> and cannot be undone.
+            </p>
+            <div className="custom-modal-actions">
+              <button className="btn-outline" onClick={() => setDeleteTarget(null)} disabled={Boolean(updating)}>
+                Cancel
+              </button>
+              <button
+                className="btn-danger"
+                onClick={() => handleDelete(deleteTarget.id, deleteTarget.name)}
+                disabled={Boolean(updating)}
+              >
+                <i className={`fa-solid ${updating ? "fa-spinner fa-spin" : "fa-trash"}`} />
+                {updating ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
